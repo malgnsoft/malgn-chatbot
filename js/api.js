@@ -1,0 +1,308 @@
+/**
+ * API 모듈
+ *
+ * Backend API와 통신하는 함수들을 제공합니다.
+ */
+
+// API 기본 URL (개발 환경)
+// 배포 시에는 실제 Workers URL로 변경하세요
+const API_BASE_URL = 'http://localhost:8787';
+
+/**
+ * API 객체
+ * 모든 API 호출 함수를 포함합니다.
+ */
+const API = {
+  /**
+   * 기본 URL 설정
+   * @param {string} url - 새 기본 URL
+   */
+  setBaseUrl(url) {
+    this.baseUrl = url;
+  },
+
+  /**
+   * 현재 기본 URL 반환
+   */
+  getBaseUrl() {
+    return this.baseUrl || API_BASE_URL;
+  },
+
+  /**
+   * 채팅 메시지 전송
+   * @param {string} message - 사용자 메시지
+   * @param {string|null} sessionId - 세션 ID (선택적)
+   * @returns {Promise<Object>} - API 응답
+   */
+  async sendMessage(message, sessionId = null) {
+    // AI 설정 가져오기
+    const aiSettings = typeof Settings !== 'undefined' ? Settings.getAISettings() : {};
+
+    const response = await fetch(`${this.getBaseUrl()}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message,
+        sessionId,
+        settings: aiSettings
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || '채팅 요청 실패');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 문서 목록 조회
+   * @param {number} page - 페이지 번호
+   * @param {number} limit - 페이지당 개수
+   * @returns {Promise<Object>} - API 응답
+   */
+  async getDocuments(page = 1, limit = 20) {
+    const response = await fetch(
+      `${this.getBaseUrl()}/documents?page=${page}&limit=${limit}`
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || '문서 목록 조회 실패');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 파일 업로드
+   * @param {File} file - 업로드할 파일
+   * @param {string|null} title - 문서 제목 (선택적)
+   * @returns {Promise<Object>} - API 응답
+   */
+  async uploadDocument(file, title = null) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', 'file');
+    if (title) {
+      formData.append('title', title);
+    }
+
+    const response = await fetch(`${this.getBaseUrl()}/documents`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || '파일 업로드 실패');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 텍스트 콘텐츠 업로드
+   * @param {string} title - 제목
+   * @param {string} content - 텍스트 내용
+   * @returns {Promise<Object>} - API 응답
+   */
+  async uploadText(title, content) {
+    const response = await fetch(`${this.getBaseUrl()}/documents`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        type: 'text',
+        title,
+        content
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || '텍스트 추가 실패');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 링크 콘텐츠 업로드
+   * @param {string} title - 제목
+   * @param {string} url - 링크 URL
+   * @returns {Promise<Object>} - API 응답
+   */
+  async uploadLink(title, url) {
+    const response = await fetch(`${this.getBaseUrl()}/documents`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        type: 'link',
+        title,
+        url
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || '링크 추가 실패');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 문서 상세 조회
+   * @param {string} id - 문서 ID
+   * @returns {Promise<Object>} - API 응답
+   */
+  async getDocument(id) {
+    const response = await fetch(`${this.getBaseUrl()}/documents/${id}`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || '문서 조회 실패');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 문서 삭제
+   * @param {string} id - 문서 ID
+   * @returns {Promise<Object>} - API 응답
+   */
+  async deleteDocument(id) {
+    const response = await fetch(`${this.getBaseUrl()}/documents/${id}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || '문서 삭제 실패');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 세션 목록 조회
+   * @param {number} page - 페이지 번호
+   * @param {number} limit - 페이지당 개수
+   * @returns {Promise<Object>} - API 응답
+   */
+  async getSessions(page = 1, limit = 50) {
+    const response = await fetch(
+      `${this.getBaseUrl()}/sessions?page=${page}&limit=${limit}`
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || '세션 목록 조회 실패');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 새 세션 생성
+   * @returns {Promise<Object>} - API 응답
+   */
+  async createSession() {
+    const response = await fetch(`${this.getBaseUrl()}/sessions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || '세션 생성 실패');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 세션 상세 조회 (메시지 포함)
+   * @param {string} id - 세션 ID
+   * @returns {Promise<Object>} - API 응답
+   */
+  async getSession(id) {
+    const response = await fetch(`${this.getBaseUrl()}/sessions/${id}`);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || '세션 조회 실패');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 세션 AI 설정 업데이트
+   * @param {number} id - 세션 ID
+   * @param {Object} settings - AI 설정
+   * @returns {Promise<Object>} - API 응답
+   */
+  async updateSession(id, settings) {
+    const response = await fetch(`${this.getBaseUrl()}/sessions/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ settings })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || '세션 업데이트 실패');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 세션 삭제
+   * @param {string} id - 세션 ID
+   * @returns {Promise<Object>} - API 응답
+   */
+  async deleteSession(id) {
+    const response = await fetch(`${this.getBaseUrl()}/sessions/${id}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || '세션 삭제 실패');
+    }
+
+    return response.json();
+  },
+
+  /**
+   * 서버 상태 확인
+   * @returns {Promise<Object>} - API 응답
+   */
+  async healthCheck() {
+    const response = await fetch(`${this.getBaseUrl()}/health`);
+
+    if (!response.ok) {
+      throw new Error('서버 연결 실패');
+    }
+
+    return response.json();
+  }
+};
+
+// 전역으로 API 객체 노출
+window.API = API;

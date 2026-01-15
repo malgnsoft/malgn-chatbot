@@ -1,0 +1,432 @@
+/**
+ * Documents 모듈
+ *
+ * 문서 업로드 및 관리 기능을 제공합니다.
+ * 지원 형식: 텍스트, 파일 첨부, 링크
+ */
+
+const Documents = {
+  selectedFile: null,
+
+  /**
+   * 초기화
+   */
+  init() {
+    // Content type tabs
+    this.contentTypeTabs = document.querySelectorAll('.content-type-tab');
+    this.contentForms = document.querySelectorAll('.content-form');
+
+    // Text form elements
+    this.textTitle = document.getElementById('textTitle');
+    this.textContent = document.getElementById('textContent');
+    this.addTextBtn = document.getElementById('addTextBtn');
+
+    // File form elements
+    this.fileTitle = document.getElementById('fileTitle');
+    this.fileInput = document.getElementById('fileInput');
+    this.uploadBtn = document.getElementById('uploadBtn');
+    this.selectedFileEl = document.getElementById('selectedFile');
+    this.selectedFileName = document.getElementById('selectedFileName');
+    this.clearFileBtn = document.getElementById('clearFileBtn');
+    this.addFileBtn = document.getElementById('addFileBtn');
+
+    // Link form elements
+    this.linkTitle = document.getElementById('linkTitle');
+    this.linkUrl = document.getElementById('linkUrl');
+    this.addLinkBtn = document.getElementById('addLinkBtn');
+
+    // Common elements
+    this.uploadProgress = document.getElementById('uploadProgress');
+    this.documentList = document.getElementById('documentList');
+    this.documentCount = document.getElementById('documentCount');
+
+    if (!this.documentList) {
+      console.warn('Documents: 문서 목록 영역을 찾을 수 없습니다');
+      return;
+    }
+
+    this.bindEvents();
+    this.loadDocuments();
+  },
+
+  /**
+   * 이벤트 바인딩
+   */
+  bindEvents() {
+    // Content type tab switching
+    this.contentTypeTabs.forEach(tab => {
+      tab.addEventListener('click', () => this.switchContentType(tab.dataset.type));
+    });
+
+    // Text form
+    if (this.addTextBtn) {
+      this.addTextBtn.addEventListener('click', () => this.addTextContent());
+    }
+
+    // File form
+    if (this.uploadBtn) {
+      this.uploadBtn.addEventListener('click', () => this.fileInput.click());
+
+      this.fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          this.selectFile(file);
+        }
+      });
+
+      // Drag and drop
+      this.uploadBtn.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        this.uploadBtn.classList.add('dragover');
+      });
+
+      this.uploadBtn.addEventListener('dragleave', () => {
+        this.uploadBtn.classList.remove('dragover');
+      });
+
+      this.uploadBtn.addEventListener('drop', (e) => {
+        e.preventDefault();
+        this.uploadBtn.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+          this.selectFile(file);
+        }
+      });
+    }
+
+    if (this.clearFileBtn) {
+      this.clearFileBtn.addEventListener('click', () => this.clearSelectedFile());
+    }
+
+    if (this.addFileBtn) {
+      this.addFileBtn.addEventListener('click', () => this.addFileContent());
+    }
+
+    // Link form
+    if (this.addLinkBtn) {
+      this.addLinkBtn.addEventListener('click', () => this.addLinkContent());
+    }
+  },
+
+  /**
+   * 콘텐츠 타입 전환
+   */
+  switchContentType(type) {
+    // Update tabs
+    this.contentTypeTabs.forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.type === type);
+    });
+
+    // Update forms
+    this.contentForms.forEach(form => {
+      form.classList.toggle('active', form.id === `form-${type}`);
+    });
+  },
+
+  /**
+   * 파일 선택
+   */
+  selectFile(file) {
+    // Validate file type
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['pdf', 'txt', 'md'].includes(ext)) {
+      alert('지원하지 않는 파일 형식입니다.\n지원 형식: PDF, TXT, MD');
+      return;
+    }
+
+    // Validate file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('파일 크기가 너무 큽니다.\n최대 크기: 10MB');
+      return;
+    }
+
+    this.selectedFile = file;
+    this.selectedFileName.textContent = file.name;
+    this.selectedFileEl.hidden = false;
+    this.uploadBtn.hidden = true;
+  },
+
+  /**
+   * 선택된 파일 초기화
+   */
+  clearSelectedFile() {
+    this.selectedFile = null;
+    this.fileInput.value = '';
+    this.selectedFileEl.hidden = true;
+    this.uploadBtn.hidden = false;
+  },
+
+  /**
+   * 텍스트 콘텐츠 추가
+   */
+  async addTextContent() {
+    const title = this.textTitle.value.trim();
+    const content = this.textContent.value.trim();
+
+    if (!title) {
+      alert('제목을 입력해주세요.');
+      this.textTitle.focus();
+      return;
+    }
+
+    if (!content) {
+      alert('내용을 입력해주세요.');
+      this.textContent.focus();
+      return;
+    }
+
+    this.showProgress();
+
+    try {
+      const result = await API.uploadText(title, content);
+
+      if (result.success) {
+        this.hideProgress();
+        this.textTitle.value = '';
+        this.textContent.value = '';
+        this.loadDocuments();
+        this.notifyChat(`"${title}" 텍스트가 추가되었습니다.`);
+      }
+    } catch (error) {
+      console.error('텍스트 추가 실패:', error);
+      this.hideProgress();
+      alert('텍스트 추가 실패: ' + error.message);
+    }
+  },
+
+  /**
+   * 파일 콘텐츠 추가
+   */
+  async addFileContent() {
+    const title = this.fileTitle.value.trim();
+
+    if (!title) {
+      alert('제목을 입력해주세요.');
+      this.fileTitle.focus();
+      return;
+    }
+
+    if (!this.selectedFile) {
+      alert('파일을 선택해주세요.');
+      return;
+    }
+
+    this.showProgress();
+
+    try {
+      const result = await API.uploadDocument(this.selectedFile, title);
+
+      if (result.success) {
+        this.hideProgress();
+        this.fileTitle.value = '';
+        this.clearSelectedFile();
+        this.loadDocuments();
+        this.notifyChat(`"${title}" 파일이 업로드되었습니다.`);
+      }
+    } catch (error) {
+      console.error('파일 업로드 실패:', error);
+      this.hideProgress();
+      alert('파일 업로드 실패: ' + error.message);
+    }
+  },
+
+  /**
+   * 링크 콘텐츠 추가
+   */
+  async addLinkContent() {
+    const title = this.linkTitle.value.trim();
+    const url = this.linkUrl.value.trim();
+
+    if (!title) {
+      alert('제목을 입력해주세요.');
+      this.linkTitle.focus();
+      return;
+    }
+
+    if (!url) {
+      alert('링크를 입력해주세요.');
+      this.linkUrl.focus();
+      return;
+    }
+
+    // Validate URL
+    try {
+      new URL(url);
+    } catch {
+      alert('올바른 URL 형식이 아닙니다.');
+      this.linkUrl.focus();
+      return;
+    }
+
+    this.showProgress();
+
+    try {
+      const result = await API.uploadLink(title, url);
+
+      if (result.success) {
+        this.hideProgress();
+        this.linkTitle.value = '';
+        this.linkUrl.value = '';
+        this.loadDocuments();
+        this.notifyChat(`"${title}" 링크가 추가되었습니다.`);
+      }
+    } catch (error) {
+      console.error('링크 추가 실패:', error);
+      this.hideProgress();
+      alert('링크 추가 실패: ' + error.message);
+    }
+  },
+
+  /**
+   * 문서 목록 로드
+   */
+  async loadDocuments() {
+    try {
+      const result = await API.getDocuments();
+
+      if (result.success) {
+        this.renderDocuments(result.data.documents);
+      }
+    } catch (error) {
+      console.error('문서 목록 로드 실패:', error);
+      this.renderEmpty('문서 목록을 불러올 수 없습니다');
+    }
+  },
+
+  /**
+   * 문서 목록 렌더링
+   */
+  renderDocuments(documents) {
+    // Update document count
+    if (this.documentCount) {
+      this.documentCount.textContent = `${documents?.length || 0}개`;
+    }
+
+    if (!documents || documents.length === 0) {
+      this.renderEmpty('등록된 자료가 없습니다');
+      return;
+    }
+
+    this.documentList.innerHTML = documents.map(doc => `
+      <div class="document-item" data-id="${doc.id}">
+        <div class="document-item__icon">
+          <i class="bi ${this.getTypeIcon(doc.type || doc.file_type)}"></i>
+        </div>
+        <div class="document-item__info">
+          <div class="document-item__title" title="${doc.title}">${doc.title}</div>
+          <div class="document-item__meta">
+            ${this.getTypeBadge(doc.type || doc.file_type)} | ${doc.chunk_count || 0}개 청크
+          </div>
+        </div>
+        <button class="document-item__delete" data-id="${doc.id}" title="삭제">
+          <i class="bi bi-trash3"></i>
+        </button>
+      </div>
+    `).join('');
+
+    // Bind delete button events
+    this.documentList.querySelectorAll('.document-item__delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        this.deleteDocument(id);
+      });
+    });
+  },
+
+  /**
+   * 빈 상태 렌더링
+   */
+  renderEmpty(message) {
+    if (this.documentCount) {
+      this.documentCount.textContent = '0개';
+    }
+    this.documentList.innerHTML = `
+      <p class="document-list__empty">${message}</p>
+    `;
+  },
+
+  /**
+   * 문서 삭제
+   */
+  async deleteDocument(id) {
+    if (!confirm('이 자료를 삭제하시겠습니까?\n삭제된 자료는 복구할 수 없습니다.')) {
+      return;
+    }
+
+    // ID를 숫자로 변환
+    const numericId = Number(id);
+
+    try {
+      const result = await API.deleteDocument(numericId);
+
+      if (result.success) {
+        this.loadDocuments();
+        this.notifyChat('자료가 삭제되었습니다.');
+      }
+    } catch (error) {
+      console.error('삭제 실패:', error);
+      alert('삭제 실패: ' + error.message);
+    }
+  },
+
+  /**
+   * 진행 상태 표시
+   */
+  showProgress() {
+    if (this.uploadProgress) {
+      this.uploadProgress.hidden = false;
+    }
+  },
+
+  /**
+   * 진행 상태 숨김
+   */
+  hideProgress() {
+    if (this.uploadProgress) {
+      this.uploadProgress.hidden = true;
+    }
+  },
+
+  /**
+   * 채팅에 알림
+   */
+  notifyChat(message) {
+    if (typeof Chat !== 'undefined' && Chat.addSystemMessage) {
+      Chat.addSystemMessage(message);
+    }
+  },
+
+  /**
+   * 타입에 따른 아이콘 반환
+   */
+  getTypeIcon(type) {
+    const icons = {
+      'text': 'bi-file-earmark-text-fill',
+      'pdf': 'bi-file-earmark-pdf-fill',
+      'txt': 'bi-file-earmark-text-fill',
+      'md': 'bi-markdown-fill',
+      'file': 'bi-file-earmark-arrow-up-fill',
+      'link': 'bi-link-45deg'
+    };
+    return icons[type] || 'bi-file-earmark-fill';
+  },
+
+  /**
+   * 타입 뱃지 텍스트
+   */
+  getTypeBadge(type) {
+    const badges = {
+      'text': '텍스트',
+      'pdf': 'PDF',
+      'txt': 'TXT',
+      'md': 'MD',
+      'file': '파일',
+      'link': '링크'
+    };
+    return badges[type] || type?.toUpperCase() || '기타';
+  }
+};
+
+// 전역으로 Documents 객체 노출
+window.Documents = Documents;
