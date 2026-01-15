@@ -69,9 +69,9 @@ const App = {
       Settings.init();
     }
 
-    // Documents 초기화
-    if (typeof Documents !== 'undefined') {
-      Documents.init();
+    // Contents 초기화
+    if (typeof Contents !== 'undefined') {
+      Contents.init();
     }
 
     // Sessions 초기화

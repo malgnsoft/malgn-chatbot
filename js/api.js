@@ -59,19 +59,19 @@ const API = {
   },
 
   /**
-   * 문서 목록 조회
+   * 콘텐츠 목록 조회
    * @param {number} page - 페이지 번호
    * @param {number} limit - 페이지당 개수
    * @returns {Promise<Object>} - API 응답
    */
-  async getDocuments(page = 1, limit = 20) {
+  async getContents(page = 1, limit = 20) {
     const response = await fetch(
-      `${this.getBaseUrl()}/documents?page=${page}&limit=${limit}`
+      `${this.getBaseUrl()}/contents?page=${page}&limit=${limit}`
     );
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || '문서 목록 조회 실패');
+      throw new Error(error.error?.message || '콘텐츠 목록 조회 실패');
     }
 
     return response.json();
@@ -80,10 +80,10 @@ const API = {
   /**
    * 파일 업로드
    * @param {File} file - 업로드할 파일
-   * @param {string|null} title - 문서 제목 (선택적)
+   * @param {string|null} title - 콘텐츠 제목 (선택적)
    * @returns {Promise<Object>} - API 응답
    */
-  async uploadDocument(file, title = null) {
+  async uploadFile(file, title = null) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', 'file');
@@ -91,7 +91,7 @@ const API = {
       formData.append('title', title);
     }
 
-    const response = await fetch(`${this.getBaseUrl()}/documents`, {
+    const response = await fetch(`${this.getBaseUrl()}/contents`, {
       method: 'POST',
       body: formData
     });
@@ -111,7 +111,7 @@ const API = {
    * @returns {Promise<Object>} - API 응답
    */
   async uploadText(title, content) {
-    const response = await fetch(`${this.getBaseUrl()}/documents`, {
+    const response = await fetch(`${this.getBaseUrl()}/contents`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -138,7 +138,7 @@ const API = {
    * @returns {Promise<Object>} - API 응답
    */
   async uploadLink(title, url) {
-    const response = await fetch(`${this.getBaseUrl()}/documents`, {
+    const response = await fetch(`${this.getBaseUrl()}/contents`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -159,34 +159,34 @@ const API = {
   },
 
   /**
-   * 문서 상세 조회
-   * @param {string} id - 문서 ID
+   * 콘텐츠 상세 조회
+   * @param {string} id - 콘텐츠 ID
    * @returns {Promise<Object>} - API 응답
    */
-  async getDocument(id) {
-    const response = await fetch(`${this.getBaseUrl()}/documents/${id}`);
+  async getContent(id) {
+    const response = await fetch(`${this.getBaseUrl()}/contents/${id}`);
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || '문서 조회 실패');
+      throw new Error(error.error?.message || '콘텐츠 조회 실패');
     }
 
     return response.json();
   },
 
   /**
-   * 문서 삭제
-   * @param {string} id - 문서 ID
+   * 콘텐츠 삭제
+   * @param {string} id - 콘텐츠 ID
    * @returns {Promise<Object>} - API 응답
    */
-  async deleteDocument(id) {
-    const response = await fetch(`${this.getBaseUrl()}/documents/${id}`, {
+  async deleteContent(id) {
+    const response = await fetch(`${this.getBaseUrl()}/contents/${id}`, {
       method: 'DELETE'
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || '문서 삭제 실패');
+      throw new Error(error.error?.message || '콘텐츠 삭제 실패');
     }
 
     return response.json();

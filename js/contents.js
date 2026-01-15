@@ -1,11 +1,11 @@
 /**
- * Documents 모듈
+ * Contents 모듈
  *
- * 문서 업로드 및 관리 기능을 제공합니다.
+ * 콘텐츠 업로드 및 관리 기능을 제공합니다.
  * 지원 형식: 텍스트, 파일 첨부, 링크
  */
 
-const Documents = {
+const Contents = {
   selectedFile: null,
 
   /**
@@ -37,16 +37,16 @@ const Documents = {
 
     // Common elements
     this.uploadProgress = document.getElementById('uploadProgress');
-    this.documentList = document.getElementById('documentList');
-    this.documentCount = document.getElementById('documentCount');
+    this.contentList = document.getElementById('documentList');
+    this.contentCount = document.getElementById('documentCount');
 
-    if (!this.documentList) {
-      console.warn('Documents: 문서 목록 영역을 찾을 수 없습니다');
+    if (!this.contentList) {
+      console.warn('Contents: 콘텐츠 목록 영역을 찾을 수 없습니다');
       return;
     }
 
     this.bindEvents();
-    this.loadDocuments();
+    this.loadContents();
   },
 
   /**
@@ -184,7 +184,7 @@ const Documents = {
         this.hideProgress();
         this.textTitle.value = '';
         this.textContent.value = '';
-        this.loadDocuments();
+        this.loadContents();
         this.notifyChat(`"${title}" 텍스트가 추가되었습니다.`);
       }
     } catch (error) {
@@ -214,13 +214,13 @@ const Documents = {
     this.showProgress();
 
     try {
-      const result = await API.uploadDocument(this.selectedFile, title);
+      const result = await API.uploadFile(this.selectedFile, title);
 
       if (result.success) {
         this.hideProgress();
         this.fileTitle.value = '';
         this.clearSelectedFile();
-        this.loadDocuments();
+        this.loadContents();
         this.notifyChat(`"${title}" 파일이 업로드되었습니다.`);
       }
     } catch (error) {
@@ -267,7 +267,7 @@ const Documents = {
         this.hideProgress();
         this.linkTitle.value = '';
         this.linkUrl.value = '';
-        this.loadDocuments();
+        this.loadContents();
         this.notifyChat(`"${title}" 링크가 추가되었습니다.`);
       }
     } catch (error) {
@@ -278,58 +278,58 @@ const Documents = {
   },
 
   /**
-   * 문서 목록 로드
+   * 콘텐츠 목록 로드
    */
-  async loadDocuments() {
+  async loadContents() {
     try {
-      const result = await API.getDocuments();
+      const result = await API.getContents();
 
       if (result.success) {
-        this.renderDocuments(result.data.documents);
+        this.renderContents(result.data.contents);
       }
     } catch (error) {
-      console.error('문서 목록 로드 실패:', error);
-      this.renderEmpty('문서 목록을 불러올 수 없습니다');
+      console.error('콘텐츠 목록 로드 실패:', error);
+      this.renderEmpty('콘텐츠 목록을 불러올 수 없습니다');
     }
   },
 
   /**
-   * 문서 목록 렌더링
+   * 콘텐츠 목록 렌더링
    */
-  renderDocuments(documents) {
-    // Update document count
-    if (this.documentCount) {
-      this.documentCount.textContent = `${documents?.length || 0}개`;
+  renderContents(contents) {
+    // Update content count
+    if (this.contentCount) {
+      this.contentCount.textContent = `${contents?.length || 0}개`;
     }
 
-    if (!documents || documents.length === 0) {
+    if (!contents || contents.length === 0) {
       this.renderEmpty('등록된 자료가 없습니다');
       return;
     }
 
-    this.documentList.innerHTML = documents.map(doc => `
-      <div class="document-item" data-id="${doc.id}">
+    this.contentList.innerHTML = contents.map(item => `
+      <div class="document-item" data-id="${item.id}">
         <div class="document-item__icon">
-          <i class="bi ${this.getTypeIcon(doc.type || doc.file_type)}"></i>
+          <i class="bi ${this.getTypeIcon(item.type || item.file_type)}"></i>
         </div>
         <div class="document-item__info">
-          <div class="document-item__title" title="${doc.title}">${doc.title}</div>
+          <div class="document-item__title" title="${item.title}">${item.title}</div>
           <div class="document-item__meta">
-            ${this.getTypeBadge(doc.type || doc.file_type)} | ${doc.chunk_count || 0}개 청크
+            ${this.getTypeBadge(item.type || item.file_type)} | ${item.chunk_count || 0}개 청크
           </div>
         </div>
-        <button class="document-item__delete" data-id="${doc.id}" title="삭제">
+        <button class="document-item__delete" data-id="${item.id}" title="삭제">
           <i class="bi bi-trash3"></i>
         </button>
       </div>
     `).join('');
 
     // Bind delete button events
-    this.documentList.querySelectorAll('.document-item__delete').forEach(btn => {
+    this.contentList.querySelectorAll('.document-item__delete').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = btn.dataset.id;
-        this.deleteDocument(id);
+        this.deleteContent(id);
       });
     });
   },
@@ -338,18 +338,18 @@ const Documents = {
    * 빈 상태 렌더링
    */
   renderEmpty(message) {
-    if (this.documentCount) {
-      this.documentCount.textContent = '0개';
+    if (this.contentCount) {
+      this.contentCount.textContent = '0개';
     }
-    this.documentList.innerHTML = `
+    this.contentList.innerHTML = `
       <p class="document-list__empty">${message}</p>
     `;
   },
 
   /**
-   * 문서 삭제
+   * 콘텐츠 삭제
    */
-  async deleteDocument(id) {
+  async deleteContent(id) {
     if (!confirm('이 자료를 삭제하시겠습니까?\n삭제된 자료는 복구할 수 없습니다.')) {
       return;
     }
@@ -358,10 +358,10 @@ const Documents = {
     const numericId = Number(id);
 
     try {
-      const result = await API.deleteDocument(numericId);
+      const result = await API.deleteContent(numericId);
 
       if (result.success) {
-        this.loadDocuments();
+        this.loadContents();
         this.notifyChat('자료가 삭제되었습니다.');
       }
     } catch (error) {
@@ -428,5 +428,5 @@ const Documents = {
   }
 };
 
-// 전역으로 Documents 객체 노출
-window.Documents = Documents;
+// 전역으로 Contents 객체 노출
+window.Contents = Contents;
