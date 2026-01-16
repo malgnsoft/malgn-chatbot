@@ -7,11 +7,14 @@
 
 const Contents = {
   selectedFile: null,
+  selectedContentIds: new Set(), // 선택된 콘텐츠 ID 목록
 
   /**
    * 초기화
    */
   init() {
+    // 로컬 스토리지에서 선택된 콘텐츠 복원
+    this.loadSelectedContents();
     // Content type tabs
     this.contentTypeTabs = document.querySelectorAll('.content-type-tab');
     this.contentForms = document.querySelectorAll('.content-form');
@@ -309,20 +312,45 @@ const Contents = {
 
     this.contentList.innerHTML = contents.map(item => `
       <div class="document-item" data-id="${item.id}">
+        <div class="document-item__checkbox">
+          <input type="checkbox" class="form-check-input" id="content-${item.id}" data-id="${item.id}" ${this.isContentSelected(item.id) ? 'checked' : ''}>
+        </div>
         <div class="document-item__icon">
           <i class="bi ${this.getTypeIcon(item.type || item.file_type)}"></i>
         </div>
         <div class="document-item__info">
-          <div class="document-item__title" title="${item.title}">${item.title}</div>
+          <label class="document-item__title" for="content-${item.id}">${item.content_nm}</label>
           <div class="document-item__meta">
             ${this.getTypeBadge(item.type || item.file_type)} | ${item.chunk_count || 0}개 청크
           </div>
         </div>
-        <button class="document-item__delete" data-id="${item.id}" title="삭제">
-          <i class="bi bi-trash3"></i>
-        </button>
+        <div class="document-item__actions">
+          <button class="document-item__edit" data-id="${item.id}" title="수정">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="document-item__delete" data-id="${item.id}" title="삭제">
+            <i class="bi bi-trash3"></i>
+          </button>
+        </div>
       </div>
     `).join('');
+
+    // Bind checkbox events
+    this.contentList.querySelectorAll('.document-item__checkbox input').forEach(checkbox => {
+      checkbox.addEventListener('change', (e) => {
+        const id = Number(checkbox.dataset.id);
+        this.toggleContentSelection(id, checkbox.checked);
+      });
+    });
+
+    // Bind edit button events
+    this.contentList.querySelectorAll('.document-item__edit').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        this.startEditContent(id);
+      });
+    });
 
     // Bind delete button events
     this.contentList.querySelectorAll('.document-item__delete').forEach(btn => {
@@ -367,6 +395,129 @@ const Contents = {
     } catch (error) {
       console.error('삭제 실패:', error);
       alert('삭제 실패: ' + error.message);
+    }
+  },
+
+  /**
+   * 파일 타입 여부 확인
+   */
+  isFileType(type) {
+    const fileTypes = ['pdf', 'txt', 'md', 'file'];
+    return fileTypes.includes(type?.toLowerCase());
+  },
+
+  /**
+   * 콘텐츠 수정 모달 열기
+   */
+  async startEditContent(id) {
+    const numericId = Number(id);
+
+    try {
+      // 콘텐츠 상세 정보 조회
+      const result = await API.getContent(numericId);
+
+      if (!result.success) {
+        alert('콘텐츠를 불러올 수 없습니다.');
+        return;
+      }
+
+      const content = result.data;
+      const contentType = content.type || content.file_type;
+      const isFile = this.isFileType(contentType);
+
+      // 모달 요소
+      const modal = document.getElementById('editContentModal');
+      const idInput = document.getElementById('editContentId');
+      const typeInput = document.getElementById('editContentType');
+      const titleInput = document.getElementById('editContentTitle');
+      const textContainer = document.getElementById('editContentTextContainer');
+      const textArea = document.getElementById('editContentText');
+      const fileNotice = document.getElementById('editContentFileNotice');
+      const saveBtn = document.getElementById('saveEditContentBtn');
+
+      // 모달에 데이터 설정
+      idInput.value = content.id;
+      typeInput.value = contentType;
+      titleInput.value = content.content_nm || '';
+
+      // 파일 타입 여부에 따라 내용 영역 표시/숨김
+      if (isFile) {
+        textContainer.hidden = true;
+        fileNotice.hidden = false;
+        textArea.value = '';
+      } else {
+        textContainer.hidden = false;
+        fileNotice.hidden = true;
+        // 청크들의 내용을 합쳐서 보여주기
+        const fullContent = content.chunks?.map(c => c.content).join('\n\n') || '';
+        textArea.value = fullContent;
+      }
+
+      // 저장 버튼 이벤트 (기존 이벤트 제거 후 새로 등록)
+      const newSaveBtn = saveBtn.cloneNode(true);
+      saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+      newSaveBtn.addEventListener('click', () => this.saveEditContent());
+
+      // 모달 열기
+      const bsModal = new bootstrap.Modal(modal);
+      bsModal.show();
+
+    } catch (error) {
+      console.error('콘텐츠 조회 실패:', error);
+      alert('콘텐츠를 불러올 수 없습니다: ' + error.message);
+    }
+  },
+
+  /**
+   * 콘텐츠 수정 저장
+   */
+  async saveEditContent() {
+    const idInput = document.getElementById('editContentId');
+    const typeInput = document.getElementById('editContentType');
+    const titleInput = document.getElementById('editContentTitle');
+    const textArea = document.getElementById('editContentText');
+    const saveBtn = document.getElementById('saveEditContentBtn');
+
+    const id = Number(idInput.value);
+    const contentType = typeInput.value;
+    const title = titleInput.value.trim();
+    const isFile = this.isFileType(contentType);
+
+    // 파일 타입이 아닌 경우에만 내용 가져오기
+    const content = isFile ? null : textArea.value.trim();
+
+    if (!title) {
+      alert('제목을 입력해주세요.');
+      titleInput.focus();
+      return;
+    }
+
+    // 버튼 상태 변경
+    saveBtn.disabled = true;
+    saveBtn.querySelector('.save-text').classList.add('d-none');
+    saveBtn.querySelector('.saving-text').classList.remove('d-none');
+
+    try {
+      // 파일 타입은 항상 제목만 수정, 그 외는 내용이 있으면 함께 수정
+      const result = await API.updateContent(id, title, content || null);
+
+      if (result.success) {
+        // 모달 닫기
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editContentModal'));
+        modal.hide();
+
+        // 목록 새로고침
+        this.loadContents();
+        this.notifyChat('자료가 수정되었습니다.');
+      }
+    } catch (error) {
+      console.error('수정 실패:', error);
+      alert('수정 실패: ' + error.message);
+    } finally {
+      // 버튼 상태 복원
+      saveBtn.disabled = false;
+      saveBtn.querySelector('.save-text').classList.remove('d-none');
+      saveBtn.querySelector('.saving-text').classList.add('d-none');
     }
   },
 
@@ -425,6 +576,88 @@ const Contents = {
       'link': '링크'
     };
     return badges[type] || type?.toUpperCase() || '기타';
+  },
+
+  /**
+   * 콘텐츠 선택 여부 확인
+   */
+  isContentSelected(id) {
+    return this.selectedContentIds.has(Number(id));
+  },
+
+  /**
+   * 콘텐츠 선택 토글
+   */
+  toggleContentSelection(id, selected) {
+    const numericId = Number(id);
+    if (selected) {
+      this.selectedContentIds.add(numericId);
+    } else {
+      this.selectedContentIds.delete(numericId);
+    }
+    this.saveSelectedContents();
+    this.updateSelectionCount();
+  },
+
+  /**
+   * 선택된 콘텐츠 ID 목록 반환
+   */
+  getSelectedContentIds() {
+    return Array.from(this.selectedContentIds);
+  },
+
+  /**
+   * 선택된 콘텐츠 로컬 스토리지에 저장
+   */
+  saveSelectedContents() {
+    localStorage.setItem('selectedContents', JSON.stringify(this.getSelectedContentIds()));
+  },
+
+  /**
+   * 선택된 콘텐츠 로컬 스토리지에서 복원
+   */
+  loadSelectedContents() {
+    try {
+      const saved = localStorage.getItem('selectedContents');
+      if (saved) {
+        const ids = JSON.parse(saved);
+        this.selectedContentIds = new Set(ids);
+      }
+    } catch (e) {
+      console.warn('선택된 콘텐츠 복원 실패:', e);
+      this.selectedContentIds = new Set();
+    }
+  },
+
+  /**
+   * 선택 개수 업데이트
+   */
+  updateSelectionCount() {
+    const count = this.selectedContentIds.size;
+    // 선택 개수를 표시하는 요소가 있으면 업데이트
+    const countEl = document.getElementById('selectedContentCount');
+    if (countEl) {
+      countEl.textContent = count > 0 ? `${count}개 선택` : '';
+      countEl.hidden = count === 0;
+    }
+  },
+
+  /**
+   * 전체 선택/해제
+   */
+  toggleSelectAll(selectAll) {
+    const checkboxes = this.contentList.querySelectorAll('.document-item__checkbox input');
+    checkboxes.forEach(checkbox => {
+      const id = Number(checkbox.dataset.id);
+      checkbox.checked = selectAll;
+      if (selectAll) {
+        this.selectedContentIds.add(id);
+      } else {
+        this.selectedContentIds.delete(id);
+      }
+    });
+    this.saveSelectedContents();
+    this.updateSelectionCount();
   }
 };
 
