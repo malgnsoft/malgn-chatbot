@@ -442,13 +442,22 @@ const Contents = {
 
       // 타입에 따라 내용 영역 표시/숨김 및 편집 가능 여부 설정
       const isLink = contentType === 'link';
+      const isPdf = contentType === 'pdf';
 
-      if (isFile) {
-        // 파일: 내용 숨김
-        textContainer.hidden = true;
-        fileNotice.hidden = false;
-        textArea.value = '';
+      if (isPdf) {
+        // PDF: 추출된 텍스트 표시하되 읽기 전용
+        textContainer.hidden = false;
+        fileNotice.hidden = true;
+        textArea.value = content.content || '(추출된 텍스트 없음)';
+        textArea.readOnly = true;
+        textArea.style.backgroundColor = '#f5f5f5';
+      } else if (isFile) {
+        // 기타 파일(txt, md): 내용 표시 및 편집 가능
+        textContainer.hidden = false;
+        fileNotice.hidden = true;
+        textArea.value = content.content || '';
         textArea.readOnly = false;
+        textArea.style.backgroundColor = '';
       } else if (isLink) {
         // 링크(자막): 내용 표시하되 읽기 전용
         textContainer.hidden = false;
@@ -493,11 +502,11 @@ const Contents = {
     const id = Number(idInput.value);
     const contentType = typeInput.value;
     const title = titleInput.value.trim();
-    const isFile = this.isFileType(contentType);
+    const isPdf = contentType === 'pdf';
     const isLink = contentType === 'link';
 
-    // 파일/링크 타입이 아닌 경우에만 내용 가져오기 (텍스트만 내용 수정 가능)
-    const content = (isFile || isLink) ? null : textArea.value.trim();
+    // PDF/링크 타입은 내용 수정 불가, 텍스트 및 기타 파일(txt, md)은 내용 수정 가능
+    const content = (isPdf || isLink) ? null : textArea.value.trim();
 
     if (!title) {
       alert('제목을 입력해주세요.');
