@@ -174,7 +174,14 @@ const Chat = {
    * 스크롤을 맨 아래로 이동
    */
   scrollToBottom() {
-    this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    // chatbot-body 래퍼를 스크롤 (탭/콘텐츠/메시지 전체가 스크롤됨)
+    const chatbotBody = this.chatMessages.closest('.chatbot-body');
+    if (chatbotBody) {
+      chatbotBody.scrollTop = chatbotBody.scrollHeight;
+    } else {
+      // fallback
+      this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    }
   },
 
   /**

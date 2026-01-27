@@ -116,6 +116,15 @@
   opacity: 1;
 }
 
+/* Scrollable Body Wrapper */
+.chatbot-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 /* Blue Tab Content */
 .chatbot-content {
   flex: 0 0 auto;
@@ -146,8 +155,7 @@
 
 /* Blue Chat Messages */
 .chatbot-messages {
-  flex: 1 1 auto;
-  overflow-y: auto;
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -283,24 +291,20 @@
 }
 
 /* Custom Scrollbar - Blue */
-.chatbot-messages::-webkit-scrollbar,
-.chatbot-content::-webkit-scrollbar {
+.chatbot-body::-webkit-scrollbar {
   width: 6px;
 }
 
-.chatbot-messages::-webkit-scrollbar-track,
-.chatbot-content::-webkit-scrollbar-track {
+.chatbot-body::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.chatbot-messages::-webkit-scrollbar-thumb,
-.chatbot-content::-webkit-scrollbar-thumb {
+.chatbot-body::-webkit-scrollbar-thumb {
   background: var(--chatbot-border);
   border-radius: 3px;
 }
 
-.chatbot-messages::-webkit-scrollbar-thumb:hover,
-.chatbot-content::-webkit-scrollbar-thumb:hover {
+.chatbot-body::-webkit-scrollbar-thumb:hover {
   background: var(--chatbot-accent);
 }
 
