@@ -5,9 +5,12 @@
  */
 
 // API 기본 URL (환경에 따라 자동 선택)
-const API_BASE_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:8787'
-  : 'https://malgn-chatbot-api.dotype.workers.dev';
+// 프로덕션 도메인이 아니면 로컬 API 서버 사용 (Live Server, localhost 등 지원)
+const isProduction = window.location.hostname.includes('pages.dev') ||
+                     window.location.hostname.includes('dotype.workers.dev');
+const API_BASE_URL = isProduction
+  ? 'https://malgn-chatbot-api.dotype.workers.dev'
+  : 'http://localhost:8787';
 
 /**
  * API 객체
@@ -243,15 +246,18 @@ const API = {
 
   /**
    * 새 세션 생성
+   * @param {number[]} contentIds - 연결할 콘텐츠 ID 배열 (필수)
    * @returns {Promise<Object>} - API 응답
    */
-  async createSession() {
+  async createSession(contentIds = []) {
     const response = await fetch(`${this.getBaseUrl()}/sessions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({})
+      body: JSON.stringify({
+        content_ids: contentIds
+      })
     });
 
     if (!response.ok) {

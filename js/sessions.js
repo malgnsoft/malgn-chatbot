@@ -120,8 +120,19 @@ const Sessions = {
    * 새 세션 생성
    */
   async createNewSession() {
+    // 선택된 콘텐츠 ID 가져오기
+    const contentIds = typeof Contents !== 'undefined'
+      ? Contents.getSelectedContentIds()
+      : [];
+
+    // 최소 1개 이상의 학습 자료 필요
+    if (contentIds.length === 0) {
+      alert('새 채팅을 시작할 수 없습니다: 최소 하나 이상의 학습 자료를 선택해 주세요.');
+      return;
+    }
+
     try {
-      const result = await API.createSession();
+      const result = await API.createSession(contentIds);
 
       if (result.success) {
         const newSession = result.data;
@@ -151,6 +162,11 @@ const Sessions = {
     this.sessionList.querySelectorAll('.session-item').forEach(item => {
       item.classList.toggle('active', Number(item.dataset.id) === this.currentSessionId);
     });
+
+    // 채팅창 열기
+    if (typeof App !== 'undefined' && App.openChatbot) {
+      App.openChatbot();
+    }
 
     // Chat 모듈에 세션 변경 알림
     if (typeof Chat !== 'undefined' && Chat.loadSession) {

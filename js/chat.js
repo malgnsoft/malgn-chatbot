@@ -199,6 +199,7 @@ const Chat = {
   async loadSession(sessionId) {
     if (!sessionId) {
       this.clearMessages();
+      this.clearLearningData();
       return;
     }
 
@@ -213,13 +214,77 @@ const Chat = {
           Settings.applySessionSettings(result.data.settings);
         }
 
+        // 학습 데이터 표시
+        if (result.data.learning) {
+          this.renderLearningData(result.data.learning);
+        } else {
+          this.clearLearningData();
+        }
+
         // 메시지 렌더링
         this.renderMessages(result.data.messages || []);
       }
     } catch (error) {
       console.error('세션 로드 실패:', error);
       this.clearMessages();
+      this.clearLearningData();
     }
+  },
+
+  /**
+   * 학습 데이터 렌더링 (학습목표, 요약, 추천질문)
+   */
+  renderLearningData(learning) {
+    // 학습 목표
+    const goalsText = document.getElementById('goalsText');
+    if (goalsText) {
+      goalsText.textContent = learning.goal || '학습 목표가 설정되지 않았습니다.';
+    }
+
+    // 요약
+    const summaryText = document.getElementById('summaryText');
+    if (summaryText) {
+      summaryText.textContent = learning.summary || '요약이 생성되지 않았습니다.';
+    }
+
+    // 추천 질문
+    const recommendText = document.getElementById('recommendText');
+    if (recommendText) {
+      const questions = learning.recommendedQuestions || [];
+      if (questions.length > 0) {
+        recommendText.innerHTML = questions.map((q, i) =>
+          `<div class="recommend-question mb-2" style="cursor: pointer;" data-question="${this.escapeHtml(q)}">
+            <span class="badge bg-primary me-1">${i + 1}</span>${this.escapeHtml(q)}
+          </div>`
+        ).join('');
+
+        // 추천 질문 클릭 이벤트
+        recommendText.querySelectorAll('.recommend-question').forEach(el => {
+          el.addEventListener('click', () => {
+            const question = el.dataset.question;
+            if (this.chatInput) {
+              this.chatInput.value = question;
+              this.chatInput.focus();
+            }
+          });
+        });
+      } else {
+        recommendText.textContent = '추천 질문이 생성되지 않았습니다.';
+      }
+    }
+  },
+
+  /**
+   * 학습 데이터 초기화
+   */
+  clearLearningData() {
+    const goalsText = document.getElementById('goalsText');
+    const summaryText = document.getElementById('summaryText');
+    const recommendText = document.getElementById('recommendText');
+
+    if (goalsText) goalsText.textContent = '학습 목표가 설정되지 않았습니다.';
+    if (summaryText) summaryText.textContent = '요약이 생성되지 않았습니다.';
+    if (recommendText) recommendText.textContent = '추천 질문이 생성되지 않았습니다.';
   },
 
   /**

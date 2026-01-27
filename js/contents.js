@@ -321,7 +321,7 @@ const Contents = {
         <div class="document-item__info">
           <label class="document-item__title" for="content-${item.id}">${item.content_nm}</label>
           <div class="document-item__meta">
-            ${this.getTypeBadge(item.type || item.file_type)} | ${item.chunk_count || 0}개 청크
+            ${this.getTypeBadge(item.type || item.file_type)} | ${this.formatFileSize(item.file_size)}
           </div>
         </div>
         <div class="document-item__actions">
@@ -576,6 +576,16 @@ const Contents = {
       'link': '링크'
     };
     return badges[type] || type?.toUpperCase() || '기타';
+  },
+
+  /**
+   * 파일 크기 포맷팅
+   */
+  formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return (bytes / Math.pow(1024, i)).toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
   },
 
   /**
