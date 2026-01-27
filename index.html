@@ -271,10 +271,8 @@
       </button>
     </div>
 
-    <!-- Scrollable Body (Tabs + Content + Messages) -->
-    <div class="chatbot-body">
-      <!-- Tabs -->
-      <ul class="nav nav-tabs nav-fill border-bottom" role="tablist">
+    <!-- Tabs (Fixed) -->
+    <ul class="nav nav-tabs nav-fill border-bottom" role="tablist">
         <li class="nav-item" role="presentation">
           <button class="nav-link active" data-tab="goals">
             <i class="bi bi-bullseye d-block d-sm-none"></i>
@@ -299,8 +297,10 @@
             <span class="d-none d-sm-inline">퀴즈</span>
           </button>
         </li>
-      </ul>
+    </ul>
 
+    <!-- Scrollable Body (Content + Messages) -->
+    <div class="chatbot-body">
       <!-- Tab Content -->
       <div class="chatbot-content p-3 bg-light">
         <div class="tab-content active" id="tab-goals">

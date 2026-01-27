@@ -116,7 +116,12 @@
   opacity: 1;
 }
 
-/* Scrollable Body Wrapper */
+/* Fixed Tabs */
+.chatbot .nav-tabs {
+  flex: 0 0 auto;
+}
+
+/* Scrollable Body Wrapper (Tab Content + Messages) */
 .chatbot-body {
   flex: 1 1 auto;
   overflow-y: auto;
