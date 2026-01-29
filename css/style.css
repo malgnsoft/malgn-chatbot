@@ -799,6 +799,39 @@ h1, h5.card-title {
 }
 
 /* ============================================
+   Embed Code Block
+   ============================================ */
+
+.embed-code-block {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 20px;
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  border-radius: 0 0 14px 14px;
+  white-space: pre;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+.embed-code-block code {
+  color: inherit;
+  font-family: inherit;
+}
+
+.btn-outline-primary {
+  color: var(--flat-primary) !important;
+  border-color: var(--flat-primary) !important;
+  border-radius: 6px !important;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--flat-primary) !important;
+  color: white !important;
+}
+
+/* ============================================
    Utilities
    ============================================ */
 

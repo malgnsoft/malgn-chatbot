@@ -132,8 +132,8 @@ const Contents = {
   selectFile(file) {
     // Validate file type
     const ext = file.name.split('.').pop().toLowerCase();
-    if (!['pdf', 'txt', 'md'].includes(ext)) {
-      alert('지원하지 않는 파일 형식입니다.\n지원 형식: PDF, TXT, MD');
+    if (!['pdf', 'txt', 'md', 'srt', 'vtt'].includes(ext)) {
+      alert('지원하지 않는 파일 형식입니다.\n지원 형식: PDF, TXT, MD, SRT, VTT');
       return;
     }
 
@@ -631,6 +631,9 @@ const Contents = {
     }
     this.saveSelectedContents();
     this.updateSelectionCount();
+
+    // 임베드 코드 업데이트 이벤트
+    window.dispatchEvent(new CustomEvent('contents:changed'));
   },
 
   /**

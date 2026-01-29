@@ -228,6 +228,9 @@ const Chat = {
           this.clearLearningData();
         }
 
+        // 퀴즈 로드
+        this.loadQuizzes(this.sessionId);
+
         // 메시지 렌더링
         this.renderMessages(result.data.messages || []);
       }
@@ -301,10 +304,196 @@ const Chat = {
     const goalsText = document.getElementById('goalsText');
     const summaryText = document.getElementById('summaryText');
     const recommendText = document.getElementById('recommendText');
+    const quizText = document.getElementById('quizText');
 
     if (goalsText) goalsText.textContent = '학습 목표가 설정되지 않았습니다.';
     if (summaryText) summaryText.textContent = '요약이 생성되지 않았습니다.';
     if (recommendText) recommendText.textContent = '추천 질문이 생성되지 않았습니다.';
+    if (quizText) quizText.textContent = '퀴즈가 생성되지 않았습니다.';
+  },
+
+  /**
+   * 퀴즈 로드
+   */
+  async loadQuizzes(sessionId) {
+    const quizText = document.getElementById('quizText');
+    if (!quizText) return;
+
+    try {
+      const result = await API.getSessionQuizzes(sessionId);
+
+      if (result.success && result.data.quizzes && result.data.quizzes.length > 0) {
+        this.renderQuizzes(result.data.quizzes);
+      } else {
+        quizText.textContent = '퀴즈가 생성되지 않았습니다.';
+      }
+    } catch (error) {
+      console.error('퀴즈 로드 실패:', error);
+      quizText.textContent = '퀴즈를 불러올 수 없습니다.';
+    }
+  },
+
+  /**
+   * 퀴즈 렌더링
+   */
+  renderQuizzes(quizzes) {
+    const quizText = document.getElementById('quizText');
+    if (!quizText) return;
+
+    // 현재 퀴즈 인덱스 초기화
+    this.currentQuizIndex = 0;
+    this.quizzes = quizzes;
+    this.quizAnswers = {};
+
+    this.showCurrentQuiz();
+  },
+
+  /**
+   * 현재 퀴즈 표시
+   */
+  showCurrentQuiz() {
+    const quizText = document.getElementById('quizText');
+    if (!quizText || !this.quizzes || this.quizzes.length === 0) return;
+
+    const quiz = this.quizzes[this.currentQuizIndex];
+    const total = this.quizzes.length;
+    const current = this.currentQuizIndex + 1;
+
+    let html = `
+      <div class="quiz-container">
+        <div class="quiz-progress mb-2">
+          <span class="badge bg-primary">${current} / ${total}</span>
+          <span class="badge ${quiz.quizType === 'choice' ? 'bg-info' : 'bg-warning'} ms-1">
+            ${quiz.quizType === 'choice' ? '4지선다' : 'OX퀴즈'}
+          </span>
+        </div>
+        <div class="quiz-question mb-2">
+          <strong>Q${current}.</strong> ${this.escapeHtml(quiz.question)}
+        </div>
+        <div class="quiz-options">
+    `;
+
+    if (quiz.quizType === 'choice') {
+      // 4지선다
+      quiz.options.forEach((option, i) => {
+        const optionNum = i + 1;
+        const isSelected = this.quizAnswers[quiz.id] === String(optionNum);
+        html += `
+          <div class="quiz-option ${isSelected ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="${optionNum}">
+            <span class="option-num">${optionNum}</span> ${this.escapeHtml(option)}
+          </div>
+        `;
+      });
+    } else {
+      // OX 퀴즈
+      const isO = this.quizAnswers[quiz.id] === 'O';
+      const isX = this.quizAnswers[quiz.id] === 'X';
+      html += `
+        <div class="quiz-ox-options">
+          <div class="quiz-option quiz-ox ${isO ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="O">O</div>
+          <div class="quiz-option quiz-ox ${isX ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="X">X</div>
+        </div>
+      `;
+    }
+
+    html += `
+        </div>
+        <div class="quiz-nav mt-3">
+          <button class="btn btn-sm btn-outline-secondary" id="prevQuizBtn" ${current === 1 ? 'disabled' : ''}>
+            <i class="bi bi-chevron-left"></i> 이전
+          </button>
+          <button class="btn btn-sm btn-outline-secondary ms-2" id="nextQuizBtn" ${current === total ? 'disabled' : ''}>
+            다음 <i class="bi bi-chevron-right"></i>
+          </button>
+          <button class="btn btn-sm btn-primary ms-2" id="checkAnswerBtn">정답 확인</button>
+        </div>
+        <div class="quiz-result mt-2" id="quizResult" style="display: none;"></div>
+      </div>
+    `;
+
+    quizText.innerHTML = html;
+
+    // 이벤트 바인딩
+    quizText.querySelectorAll('.quiz-option').forEach(el => {
+      el.addEventListener('click', () => {
+        const quizId = el.dataset.quizId;
+        const answer = el.dataset.answer;
+        this.selectQuizAnswer(quizId, answer);
+      });
+    });
+
+    const prevBtn = document.getElementById('prevQuizBtn');
+    const nextBtn = document.getElementById('nextQuizBtn');
+    const checkBtn = document.getElementById('checkAnswerBtn');
+
+    if (prevBtn) prevBtn.addEventListener('click', () => this.prevQuiz());
+    if (nextBtn) nextBtn.addEventListener('click', () => this.nextQuiz());
+    if (checkBtn) checkBtn.addEventListener('click', () => this.checkAnswer());
+  },
+
+  /**
+   * 퀴즈 답변 선택
+   */
+  selectQuizAnswer(quizId, answer) {
+    this.quizAnswers[quizId] = answer;
+    this.showCurrentQuiz();
+  },
+
+  /**
+   * 이전 퀴즈
+   */
+  prevQuiz() {
+    if (this.currentQuizIndex > 0) {
+      this.currentQuizIndex--;
+      this.showCurrentQuiz();
+    }
+  },
+
+  /**
+   * 다음 퀴즈
+   */
+  nextQuiz() {
+    if (this.currentQuizIndex < this.quizzes.length - 1) {
+      this.currentQuizIndex++;
+      this.showCurrentQuiz();
+    }
+  },
+
+  /**
+   * 정답 확인
+   */
+  checkAnswer() {
+    const quiz = this.quizzes[this.currentQuizIndex];
+    const userAnswer = this.quizAnswers[quiz.id];
+    const resultEl = document.getElementById('quizResult');
+
+    if (!userAnswer) {
+      resultEl.innerHTML = '<span class="text-warning">답을 선택해 주세요.</span>';
+      resultEl.style.display = 'block';
+      return;
+    }
+
+    const isCorrect = userAnswer === quiz.answer;
+    const resultClass = isCorrect ? 'text-success' : 'text-danger';
+    const resultIcon = isCorrect ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+    const resultText = isCorrect ? '정답입니다!' : '오답입니다.';
+
+    let html = `
+      <div class="${resultClass}">
+        <i class="bi ${resultIcon} me-1"></i>${resultText}
+      </div>
+    `;
+
+    if (!isCorrect) {
+      html += `<div class="text-muted small">정답: ${quiz.answer}</div>`;
+    }
+
+    if (quiz.explanation) {
+      html += `<div class="text-muted small mt-1"><strong>해설:</strong> ${this.escapeHtml(quiz.explanation)}</div>`;
+    }
+
+    resultEl.innerHTML = html;
+    resultEl.style.display = 'block';
   },
 
   /**

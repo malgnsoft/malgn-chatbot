@@ -8,14 +8,33 @@ const App = {
   /**
    * 초기화
    */
-  init() {
+  async init() {
     console.log('AI 튜터 맑은샘 초기화...');
 
     this.bindElements();
     this.bindEvents();
+
+    // 자동 로그인 후 모듈 초기화
+    await this.ensureLoggedIn();
     this.initModules();
 
     console.log('AI 튜터 맑은샘 준비 완료!');
+  },
+
+  /**
+   * 자동 로그인 (토큰이 없거나 만료된 경우)
+   */
+  async ensureLoggedIn() {
+    if (API.isLoggedIn()) {
+      return;
+    }
+
+    try {
+      await API.login('admin', 'admin123');
+      console.log('자동 로그인 완료');
+    } catch (error) {
+      console.error('자동 로그인 실패:', error.message);
+    }
   },
 
   /**
@@ -58,6 +77,9 @@ const App = {
     this.tabs.forEach(tab => {
       tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
     });
+
+    // 401 발생 시 자동 재로그인
+    window.addEventListener('auth:logout', () => this.ensureLoggedIn());
   },
 
   /**
@@ -83,6 +105,9 @@ const App = {
     if (typeof Chat !== 'undefined') {
       Chat.init();
     }
+
+    // 임베드 코드 초기화
+    this.initEmbedCode();
   },
 
   /**
@@ -123,6 +148,90 @@ const App = {
     // 선택된 탭 활성화
     document.querySelector(`.nav-link[data-tab="${tabName}"]`).classList.add('active');
     document.getElementById(`tab-${tabName}`).classList.add('active');
+  },
+
+  // ─── 임베드 코드 ──────────────────────────────
+
+  /**
+   * 임베드 코드 초기화
+   */
+  initEmbedCode() {
+    this.embedCodeEl = document.getElementById('embedCode');
+    this.copyEmbedBtn = document.getElementById('copyEmbedBtn');
+
+    if (!this.embedCodeEl) return;
+
+    // 복사 버튼 이벤트
+    this.copyEmbedBtn.addEventListener('click', () => this.copyEmbedCode());
+
+    // 설정/콘텐츠 변경 이벤트 수신
+    window.addEventListener('settings:changed', () => this.updateEmbedCode());
+    window.addEventListener('contents:changed', () => this.updateEmbedCode());
+
+    // 초기 코드 생성
+    this.updateEmbedCode();
+  },
+
+  /**
+   * 임베드 코드 업데이트
+   */
+  updateEmbedCode() {
+    if (!this.embedCodeEl) return;
+
+    const settings = typeof Settings !== 'undefined' ? Settings.getSettings() : {};
+    const contentIds = typeof Contents !== 'undefined' ? Contents.getSelectedContentIds() : [];
+    const apiUrl = API.getBaseUrl();
+    const token = API.getToken() || '';
+
+    const code = this.generateEmbedCode(apiUrl, settings, contentIds, token);
+    this.embedCodeEl.textContent = code;
+  },
+
+  /**
+   * 임베드 코드 생성
+   */
+  generateEmbedCode(apiUrl, settings, contentIds, token) {
+    const persona = (settings.persona || '').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+    const contentIdsStr = contentIds.length > 0 ? contentIds.join(', ') : '';
+
+    return `<!-- AI 튜터 맑은샘 -->
+<script>
+window.MalgnTutor = {
+  apiUrl: "${apiUrl}",
+  token: "${token}",
+  contentIds: [${contentIdsStr}],
+  settings: {
+    persona: "${persona}",
+    temperature: ${settings.temperature ?? 0.3},
+    topP: ${settings.topP ?? 0.3},
+    maxTokens: ${settings.maxTokens ?? 1024},
+    summaryCount: ${settings.summaryCount ?? 3},
+    recommendCount: ${settings.recommendCount ?? 3},
+    quizCount: ${settings.quizCount ?? 5}
+  },
+  width: ${settings.chatWidth ?? 380},
+  height: ${settings.chatHeight ?? 650}
+};
+<\/script>
+<link rel="stylesheet" href="https://malgn-chatbot.pages.dev/css/chatbot.css">
+<script src="https://malgn-chatbot.pages.dev/js/chatbot-embed.js"><\/script>`;
+  },
+
+  /**
+   * 임베드 코드 복사
+   */
+  async copyEmbedCode() {
+    if (!this.embedCodeEl) return;
+
+    try {
+      await navigator.clipboard.writeText(this.embedCodeEl.textContent);
+      this.copyEmbedBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>복사됨';
+      setTimeout(() => {
+        this.copyEmbedBtn.innerHTML = '<i class="bi bi-clipboard me-1"></i>복사';
+      }, 2000);
+    } catch (error) {
+      console.error('클립보드 복사 실패:', error);
+    }
   }
 };
 

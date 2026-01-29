@@ -212,6 +212,9 @@ const Settings = {
 
     // 세션에 AI 설정 저장 (디바운스 적용)
     this.saveToSessionDebounced();
+
+    // 임베드 코드 업데이트 이벤트
+    window.dispatchEvent(new CustomEvent('settings:changed'));
   },
 
   /**

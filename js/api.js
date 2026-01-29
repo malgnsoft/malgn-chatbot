@@ -32,6 +32,98 @@ const API = {
     return this.baseUrl || API_BASE_URL;
   },
 
+  // ─── 인증 관련 ──────────────────────────────────
+
+  /**
+   * 토큰 저장
+   */
+  setToken(token) {
+    localStorage.setItem('auth_token', token);
+  },
+
+  /**
+   * 토큰 조회
+   */
+  getToken() {
+    return localStorage.getItem('auth_token');
+  },
+
+  /**
+   * 토큰 삭제
+   */
+  removeToken() {
+    localStorage.removeItem('auth_token');
+  },
+
+  /**
+   * 로그인 여부 확인
+   */
+  isLoggedIn() {
+    return !!this.getToken();
+  },
+
+  /**
+   * Authorization 헤더 반환
+   */
+  getAuthHeaders() {
+    const token = this.getToken();
+    if (token) {
+      return { 'Authorization': `Bearer ${token}` };
+    }
+    return {};
+  },
+
+  /**
+   * 로그인
+   * @param {string} username
+   * @param {string} password
+   * @returns {Promise<Object>}
+   */
+  async login(username, password) {
+    const response = await fetch(`${this.getBaseUrl()}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.error?.message || '로그인 실패');
+    }
+
+    this.setToken(result.data.token);
+    return result;
+  },
+
+  /**
+   * 로그아웃
+   */
+  logout() {
+    this.removeToken();
+  },
+
+  /**
+   * 응답 처리 (401 자동 로그아웃)
+   */
+  async handleResponse(response) {
+    if (response.status === 401) {
+      this.removeToken();
+      // 로그인 모달 표시 이벤트 발생
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+      throw new Error('인증이 만료되었습니다. 다시 로그인해 주세요.');
+    }
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || '요청 실패');
+    }
+
+    return response.json();
+  },
+
+  // ─── 채팅 ──────────────────────────────────────
+
   /**
    * 채팅 메시지 전송
    * @param {string} message - 사용자 메시지
@@ -45,7 +137,8 @@ const API = {
     const response = await fetch(`${this.getBaseUrl()}/chat`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
       },
       body: JSON.stringify({
         message,
@@ -54,13 +147,10 @@ const API = {
       })
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || '채팅 요청 실패');
-    }
-
-    return response.json();
+    return this.handleResponse(response);
   },
+
+  // ─── 콘텐츠 ────────────────────────────────────
 
   /**
    * 콘텐츠 목록 조회
@@ -70,15 +160,11 @@ const API = {
    */
   async getContents(page = 1, limit = 20) {
     const response = await fetch(
-      `${this.getBaseUrl()}/contents?page=${page}&limit=${limit}`
+      `${this.getBaseUrl()}/contents?page=${page}&limit=${limit}`,
+      { headers: this.getAuthHeaders() }
     );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || '콘텐츠 목록 조회 실패');
-    }
-
-    return response.json();
+    return this.handleResponse(response);
   },
 
   /**
@@ -97,15 +183,11 @@ const API = {
 
     const response = await fetch(`${this.getBaseUrl()}/contents`, {
       method: 'POST',
+      headers: this.getAuthHeaders(),
       body: formData
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || '파일 업로드 실패');
-    }
-
-    return response.json();
+    return this.handleResponse(response);
   },
 
   /**
@@ -118,7 +200,8 @@ const API = {
     const response = await fetch(`${this.getBaseUrl()}/contents`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
       },
       body: JSON.stringify({
         type: 'text',
@@ -127,12 +210,7 @@ const API = {
       })
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || '텍스트 추가 실패');
-    }
-
-    return response.json();
+    return this.handleResponse(response);
   },
 
   /**
@@ -145,7 +223,8 @@ const API = {
     const response = await fetch(`${this.getBaseUrl()}/contents`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
       },
       body: JSON.stringify({
         type: 'link',
@@ -154,12 +233,7 @@ const API = {
       })
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || '링크 추가 실패');
-    }
-
-    return response.json();
+    return this.handleResponse(response);
   },
 
   /**
@@ -168,14 +242,12 @@ const API = {
    * @returns {Promise<Object>} - API 응답
    */
   async getContent(id) {
-    const response = await fetch(`${this.getBaseUrl()}/contents/${id}`);
+    const response = await fetch(
+      `${this.getBaseUrl()}/contents/${id}`,
+      { headers: this.getAuthHeaders() }
+    );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || '콘텐츠 조회 실패');
-    }
-
-    return response.json();
+    return this.handleResponse(response);
   },
 
   /**
@@ -185,15 +257,11 @@ const API = {
    */
   async deleteContent(id) {
     const response = await fetch(`${this.getBaseUrl()}/contents/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: this.getAuthHeaders()
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || '콘텐츠 삭제 실패');
-    }
-
-    return response.json();
+    return this.handleResponse(response);
   },
 
   /**
@@ -212,18 +280,16 @@ const API = {
     const response = await fetch(`${this.getBaseUrl()}/contents/${id}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
       },
       body: JSON.stringify(body)
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || '콘텐츠 수정 실패');
-    }
-
-    return response.json();
+    return this.handleResponse(response);
   },
+
+  // ─── 세션 ──────────────────────────────────────
 
   /**
    * 세션 목록 조회
@@ -233,15 +299,11 @@ const API = {
    */
   async getSessions(page = 1, limit = 50) {
     const response = await fetch(
-      `${this.getBaseUrl()}/sessions?page=${page}&limit=${limit}`
+      `${this.getBaseUrl()}/sessions?page=${page}&limit=${limit}`,
+      { headers: this.getAuthHeaders() }
     );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || '세션 목록 조회 실패');
-    }
-
-    return response.json();
+    return this.handleResponse(response);
   },
 
   /**
@@ -259,17 +321,13 @@ const API = {
     const response = await fetch(`${this.getBaseUrl()}/sessions`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
       },
       body: JSON.stringify(body)
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || '세션 생성 실패');
-    }
-
-    return response.json();
+    return this.handleResponse(response);
   },
 
   /**
@@ -278,14 +336,12 @@ const API = {
    * @returns {Promise<Object>} - API 응답
    */
   async getSession(id) {
-    const response = await fetch(`${this.getBaseUrl()}/sessions/${id}`);
+    const response = await fetch(
+      `${this.getBaseUrl()}/sessions/${id}`,
+      { headers: this.getAuthHeaders() }
+    );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || '세션 조회 실패');
-    }
-
-    return response.json();
+    return this.handleResponse(response);
   },
 
   /**
@@ -298,17 +354,13 @@ const API = {
     const response = await fetch(`${this.getBaseUrl()}/sessions/${id}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders()
       },
       body: JSON.stringify({ settings })
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || '세션 업데이트 실패');
-    }
-
-    return response.json();
+    return this.handleResponse(response);
   },
 
   /**
@@ -318,16 +370,28 @@ const API = {
    */
   async deleteSession(id) {
     const response = await fetch(`${this.getBaseUrl()}/sessions/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: this.getAuthHeaders()
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || '세션 삭제 실패');
-    }
-
-    return response.json();
+    return this.handleResponse(response);
   },
+
+  /**
+   * 세션 퀴즈 조회
+   * @param {number} id - 세션 ID
+   * @returns {Promise<Object>} - API 응답
+   */
+  async getSessionQuizzes(id) {
+    const response = await fetch(
+      `${this.getBaseUrl()}/sessions/${id}/quizzes`,
+      { headers: this.getAuthHeaders() }
+    );
+
+    return this.handleResponse(response);
+  },
+
+  // ─── 기타 ──────────────────────────────────────
 
   /**
    * 서버 상태 확인
