@@ -310,6 +310,17 @@ const Contents = {
       return;
     }
 
+    // 실제 존재하는 콘텐츠 ID 집합
+    const existingIds = new Set(contents.map(c => Number(c.id)));
+    // 삭제된 콘텐츠 ID 제거
+    const removed = [...this.selectedContentIds].filter(id => !existingIds.has(id));
+    if (removed.length > 0) {
+      removed.forEach(id => this.selectedContentIds.delete(id));
+      this.saveSelectedContents();
+      this.updateSelectionCount();
+      window.dispatchEvent(new CustomEvent('contents:changed'));
+    }
+
     this.contentList.innerHTML = contents.map(item => `
       <div class="document-item" data-id="${item.id}">
         <div class="document-item__checkbox">
