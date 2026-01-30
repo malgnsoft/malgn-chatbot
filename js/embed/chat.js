@@ -175,9 +175,9 @@ export class ChatManager {
    * 스크롤 맨 아래
    */
   scrollToBottom() {
-    const body = document.getElementById('malgn-body');
-    if (body) {
-      body.scrollTop = body.scrollHeight;
-    }
+    requestAnimationFrame(() => {
+      const body = document.getElementById('malgn-body');
+      if (body) body.scrollTop = body.scrollHeight;
+    });
   }
 }
