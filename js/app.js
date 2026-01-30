@@ -199,6 +199,9 @@ const App = {
 window.MalgnTutor = {
   apiUrl: "${apiUrl}",
   apiKey: "${apiKey}",
+  courseId: 0,
+  courseUserId: 0,
+  lessonId: 0,
   contentIds: [${contentIdsStr}],
   settings: {
     persona: "${persona}",
