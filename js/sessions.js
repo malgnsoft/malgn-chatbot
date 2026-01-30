@@ -260,7 +260,9 @@ const Sessions = {
   formatDate(dateString) {
     if (!dateString) return '';
 
-    const date = new Date(dateString);
+    // DB의 UTC 타임스탬프를 올바르게 파싱 (Z 접미사 추가)
+    const raw = dateString.endsWith('Z') || dateString.includes('+') ? dateString : dateString + 'Z';
+    const date = new Date(raw);
     const now = new Date();
     const diff = now - date;
 
@@ -287,8 +289,9 @@ const Sessions = {
       return `${days}일 전`;
     }
 
-    // 그 외
+    // 그 외 - 한국 시간(KST)으로 표시
     return date.toLocaleDateString('ko-KR', {
+      timeZone: 'Asia/Seoul',
       month: 'short',
       day: 'numeric'
     });
