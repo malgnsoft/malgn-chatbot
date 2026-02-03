@@ -184,17 +184,18 @@ const App = {
 
     const settings = typeof Settings !== 'undefined' ? Settings.getSettings() : {};
     const contentIds = typeof Contents !== 'undefined' ? Contents.getSelectedContentIds() : [];
+    const sessionId = typeof Sessions !== 'undefined' ? Sessions.getCurrentSessionId() : 0;
     const apiUrl = API.getBaseUrl();
     const apiKey = API.getApiKey() || '';
 
-    const code = this.generateEmbedCode(apiUrl, settings, contentIds, apiKey);
+    const code = this.generateEmbedCode(apiUrl, settings, contentIds, apiKey, sessionId);
     this.embedCodeEl.textContent = code;
   },
 
   /**
    * 임베드 코드 생성
    */
-  generateEmbedCode(apiUrl, settings, contentIds, apiKey) {
+  generateEmbedCode(apiUrl, settings, contentIds, apiKey, sessionId) {
     const persona = (settings.persona || '').replace(/"/g, '\\"').replace(/\n/g, '\\n');
     const contentIdsStr = contentIds.length > 0 ? contentIds.join(', ') : '';
 
@@ -205,7 +206,7 @@ const App = {
 window.MalgnTutor = {
   apiUrl: "${apiUrl}",
   apiKey: "${apiKey}",
-  sessionId: 0,      /* 기존 세션 ID (0이면 새 세션 생성) */
+  sessionId: ${sessionId || 0},      /* 기존 세션 ID (0이면 새 세션 생성) */
   courseId: 0,       /* LMS 코스 ID */
   courseUserId: 0,   /* LMS 수강생 ID */
   lessonId: 0,       /* LMS 차시 ID */

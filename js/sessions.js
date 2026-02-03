@@ -175,6 +175,11 @@ const Sessions = {
     if (typeof Chat !== 'undefined' && Chat.loadSession) {
       Chat.loadSession(sessionId);
     }
+
+    // 임베드 코드 업데이트 (세션 ID 반영)
+    if (typeof App !== 'undefined' && App.updateEmbedCode) {
+      App.updateEmbedCode();
+    }
   },
 
   /**
