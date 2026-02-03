@@ -40,6 +40,43 @@ export class ChatManager {
   }
 
   /**
+   * 기존 세션 로드
+   */
+  async loadSession(sessionId) {
+    this.sessionId = sessionId;
+
+    try {
+      const result = await this.api.getSession(sessionId);
+      if (result.success) {
+        // 기존 메시지 렌더링
+        this.clearMessages();
+        const messages = result.data.messages || [];
+        messages.forEach(msg => {
+          if (msg.role === 'user') {
+            this.addUserMessage(msg.content);
+          } else {
+            this.addAssistantMessage(msg.content);
+          }
+        });
+
+        // 세션 로드 콜백 (학습 데이터/퀴즈 로딩용)
+        if (this.onSessionLoaded) {
+          this.onSessionLoaded(result.data);
+        }
+      }
+    } catch (error) {
+      console.error('세션 로드 실패:', error);
+    }
+  }
+
+  /**
+   * 메시지 영역 초기화
+   */
+  clearMessages() {
+    this.messagesEl.innerHTML = '';
+  }
+
+  /**
    * 세션 확보 (없으면 생성)
    */
   async ensureSession() {

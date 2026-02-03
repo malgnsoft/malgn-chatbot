@@ -8,10 +8,11 @@
  * window.MalgnTutor = {
  *   apiUrl: "https://malgn-chatbot-api.dotype.workers.dev",
  *   apiKey: "YOUR_API_KEY",
+ *   sessionId: 123,       // 기존 세션 ID (있으면 기존 대화 로드)
  *   courseId: 0,
  *   courseUserId: 0,
  *   lessonId: 0,
- *   contentIds: [1, 2],
+ *   contentIds: [1, 2],   // sessionId 없을 때 새 세션 생성용
  *   settings: { persona: "...", temperature: 0.3, topP: 0.3, maxTokens: 1024 },
  *   width: 380,
  *   height: 650
@@ -85,10 +86,29 @@ if (window.__malgnTutorLoaded) {
       }
     };
 
+    // 기존 세션 로드 후 학습 데이터 렌더링 + 퀴즈 로딩
+    chatManager.onSessionLoaded = (data) => {
+      if (data.session && data.session.learning_goal) {
+        tabManager.renderLearningData({
+          goal: data.session.learning_goal,
+          summary: data.session.learning_summary,
+          recommendedQuestions: data.session.recommended_questions
+        });
+      }
+      if (data.session && data.session.id) {
+        quizManager.loadQuizzes(data.session.id);
+      }
+    };
+
     // 추천 질문 클릭 → 채팅으로 전송
     tabManager.onQuestionClick = (question) => {
       chatManager.sendMessage(question);
     };
+
+    // 기존 세션 ID가 있으면 로드
+    if (cfg.sessionId) {
+      chatManager.loadSession(cfg.sessionId);
+    }
 
     // FAB 토글
     document.getElementById('malgn-fab').addEventListener('click', () => UI.toggle());
