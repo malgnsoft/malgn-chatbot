@@ -62,7 +62,7 @@ export const UI = {
         <div class="chatbot-content">
           <div class="malgn-tab-content active" id="malgn-tab-goals">
             <h6>
-              <i class="bi bi-check2-circle"></i> 학습목표
+              <i class="bi bi-stars"></i> 학습목표
             </h6>
             <div id="malgn-goals-text">학습 목표가 설정되지 않았습니다.</div>
           </div>
