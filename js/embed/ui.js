@@ -39,7 +39,10 @@ export const UI = {
     chatbot.innerHTML = `
       <!-- Header -->
       <div class="chatbot-header">
-        <span class="chatbot-title">AI 튜터 맑은샘</span>
+        <span class="chatbot-title">
+          <i class="bi bi-mortarboard-fill chatbot-title-icon"></i>
+          AI 튜터 맑은샘
+        </span>
         <button class="chatbot-close" id="malgn-close">
           <i class="bi bi-x-lg"></i>
         </button>
@@ -59,27 +62,27 @@ export const UI = {
         <div class="chatbot-content">
           <div class="malgn-tab-content active" id="malgn-tab-goals">
             <h6>
-              <i class="bi bi-bullseye"></i> 학습목표
+              <i class="bi bi-check2-circle"></i> 학습목표
             </h6>
-            <p id="malgn-goals-text">학습 목표가 설정되지 않았습니다.</p>
+            <div id="malgn-goals-text">학습 목표가 설정되지 않았습니다.</div>
           </div>
           <div class="malgn-tab-content" id="malgn-tab-summary">
             <h6>
-              <i class="bi bi-card-text"></i> 요약
+              <i class="bi bi-journal-text"></i> 요약
             </h6>
-            <p id="malgn-summary-text">요약이 생성되지 않았습니다.</p>
+            <div id="malgn-summary-text">요약이 생성되지 않았습니다.</div>
           </div>
           <div class="malgn-tab-content" id="malgn-tab-recommend">
             <h6>
-              <i class="bi bi-lightbulb"></i> 추천 질문
+              <i class="bi bi-chat-left-quote"></i> 추천질문
             </h6>
-            <p id="malgn-recommend-text">추천 질문이 생성되지 않았습니다.</p>
+            <div id="malgn-recommend-text">추천 질문이 생성되지 않았습니다.</div>
           </div>
           <div class="malgn-tab-content" id="malgn-tab-quiz">
             <h6>
-              <i class="bi bi-question-circle"></i> 퀴즈
+              <i class="bi bi-patch-question"></i> 퀴즈
             </h6>
-            <p id="malgn-quiz-text">퀴즈가 생성되지 않았습니다.</p>
+            <div id="malgn-quiz-text">퀴즈가 생성되지 않았습니다.</div>
           </div>
         </div>
 
@@ -95,9 +98,9 @@ export const UI = {
 
       <!-- Chat Input -->
       <div class="chatbot-footer">
-        <input type="text" class="chatbot-input" id="malgn-input" placeholder="메시지를 입력하세요...">
+        <input type="text" class="chatbot-input" id="malgn-input" placeholder="메시지를 입력하세요">
         <button class="chatbot-send" id="malgn-send">
-          <i class="bi bi-send"></i>
+          <i class="bi bi-send-fill"></i>
         </button>
       </div>
     `;
