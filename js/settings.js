@@ -352,7 +352,8 @@ const Settings = {
   },
 
   /**
-   * AI 설정만 반환 (API 호출용)
+   * AI 설정만 반환 (세션 생성/업데이트용)
+   * 퀴즈 생성 옵션(choiceQuizCount, oxQuizCount)은 콘텐츠 업로드 시에만 사용
    */
   getAISettings() {
     return {
@@ -362,9 +363,7 @@ const Settings = {
       maxTokens: parseInt(this.maxTokensSlider.value),
       summaryCount: parseInt(this.summaryCountSlider.value),
       recommendCount: parseInt(this.recommendCountSlider.value),
-      quizCount: parseInt(this.quizCountSlider.value),
-      choiceQuizCount: parseInt(this.choiceQuizCountInput.value),
-      oxQuizCount: parseInt(this.oxQuizCountInput.value)
+      quizCount: parseInt(this.quizCountSlider.value)
     };
   },
 
