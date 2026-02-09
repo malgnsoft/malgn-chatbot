@@ -45,8 +45,8 @@ const App = {
     this.chatFab = document.getElementById('chatFab');
 
     // 탭
-    this.tabs = document.querySelectorAll('.nav-link[data-tab]');
-    this.tabContents = document.querySelectorAll('.tab-content');
+    this.tabs = document.querySelectorAll('.chatbot-tab[data-tab]');
+    this.tabContents = document.querySelectorAll('.malgn-tab-content');
 
     // 탭 콘텐츠
     this.goalsText = document.getElementById('goalsText');
@@ -173,7 +173,7 @@ const App = {
     this.tabContents.forEach(content => content.classList.remove('active'));
 
     // 선택된 탭 활성화
-    document.querySelector(`.nav-link[data-tab="${tabName}"]`).classList.add('active');
+    document.querySelector(`.chatbot-tab[data-tab="${tabName}"]`).classList.add('active');
     document.getElementById(`tab-${tabName}`).classList.add('active');
 
     // 탭 콘텐츠가 보이도록 상단으로 스크롤

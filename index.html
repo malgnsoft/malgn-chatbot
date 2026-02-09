@@ -319,92 +319,64 @@
   </div>
 
   <!-- Chatbot Window (Floating) -->
-  <div class="chatbot card border-0 shadow" id="chatbot" hidden>
+  <div class="chatbot" id="chatbot" hidden>
     <!-- Header -->
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
-      <h5 class="mb-0 fw-semibold">
-        <i class="bi bi-chat-square-dots me-2"></i>AI 튜터 맑은샘
-      </h5>
-      <button class="btn btn-light btn-sm" id="chatbotClose">
+    <div class="chatbot-header">
+      <span class="chatbot-title">
+        <i class="bi bi-mortarboard-fill chatbot-title-icon"></i>
+        AI 튜터 맑은샘
+      </span>
+      <button class="chatbot-close" id="chatbotClose">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
 
-    <!-- Tabs (Fixed) -->
-    <ul class="nav nav-tabs nav-fill border-bottom" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button class="nav-link active" data-tab="goals">
-            <i class="bi bi-bullseye d-block d-sm-none"></i>
-            <span class="d-none d-sm-inline">목표</span>
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" data-tab="summary">
-            <i class="bi bi-card-text d-block d-sm-none"></i>
-            <span class="d-none d-sm-inline">요약</span>
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" data-tab="recommend">
-            <i class="bi bi-lightbulb d-block d-sm-none"></i>
-            <span class="d-none d-sm-inline">추천</span>
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" data-tab="quiz">
-            <i class="bi bi-question-circle d-block d-sm-none"></i>
-            <span class="d-none d-sm-inline">퀴즈</span>
-          </button>
-        </li>
-    </ul>
+    <!-- Tabs -->
+    <div class="chatbot-tabs">
+      <button class="chatbot-tab active" data-tab="goals">목표</button>
+      <button class="chatbot-tab" data-tab="summary">요약</button>
+      <button class="chatbot-tab" data-tab="recommend">추천</button>
+      <button class="chatbot-tab" data-tab="quiz">퀴즈</button>
+    </div>
 
     <!-- Scrollable Body (Content + Messages) -->
     <div class="chatbot-body">
       <!-- Tab Content -->
-      <div class="chatbot-content p-3 bg-light">
-        <div class="tab-content active" id="tab-goals">
-          <h6 class="fw-semibold text-primary mb-2">
-            <i class="bi bi-bullseye me-1"></i>학습목표
-          </h6>
-          <p class="text-muted small mb-0" id="goalsText">학습 목표가 설정되지 않았습니다.</p>
+      <div class="chatbot-content">
+        <div class="malgn-tab-content active" id="tab-goals">
+          <h6><i class="bi bi-stars"></i> 학습목표</h6>
+          <div id="goalsText">학습 목표가 설정되지 않았습니다.</div>
         </div>
-        <div class="tab-content" id="tab-summary">
-          <h6 class="fw-semibold text-primary mb-2">
-            <i class="bi bi-card-text me-1"></i>요약
-          </h6>
-          <p class="text-muted small mb-0" id="summaryText">요약이 생성되지 않았습니다.</p>
+        <div class="malgn-tab-content" id="tab-summary">
+          <h6><i class="bi bi-journal-text"></i> 요약</h6>
+          <div id="summaryText">요약이 생성되지 않았습니다.</div>
         </div>
-        <div class="tab-content" id="tab-recommend">
-          <h6 class="fw-semibold text-primary mb-2">
-            <i class="bi bi-lightbulb me-1"></i>추천 질문
-          </h6>
-          <p class="text-muted small mb-0" id="recommendText">추천 질문이 생성되지 않았습니다.</p>
+        <div class="malgn-tab-content" id="tab-recommend">
+          <h6><i class="bi bi-chat-left-quote"></i> 추천질문</h6>
+          <div id="recommendText">추천 질문이 생성되지 않았습니다.</div>
         </div>
-        <div class="tab-content" id="tab-quiz">
-          <h6 class="fw-semibold text-primary mb-2">
-            <i class="bi bi-question-circle me-1"></i>퀴즈
-          </h6>
-          <p class="text-muted small mb-0" id="quizText">퀴즈가 생성되지 않았습니다.</p>
+        <div class="malgn-tab-content" id="tab-quiz">
+          <h6><i class="bi bi-patch-question"></i> 퀴즈</h6>
+          <div id="quizText">퀴즈가 생성되지 않았습니다.</div>
         </div>
       </div>
 
       <!-- Chat Messages -->
-      <div class="chatbot-messages p-3" id="chatMessages">
-      <div class="message message--assistant">
-        <div class="message-content">
-          <i class="bi bi-robot me-1"></i>
-          안녕하세요! AI 튜터입니다. 궁금한 점이 있으면 언제든 물어보세요!
+      <div class="chatbot-messages" id="chatMessages">
+        <div class="message message--assistant">
+          <div class="message-content">
+            안녕하세요! AI 튜터입니다. 궁금한 점이 있으면 언제든 물어보세요!
+          </div>
         </div>
       </div>
     </div>
-    </div><!-- End chatbot-body -->
 
     <!-- Chat Input -->
-    <div class="card-footer bg-white border-top p-3">
-      <form class="d-flex gap-2" id="chatForm">
-        <input type="text" class="form-control" id="chatInput" placeholder="메시지를 입력하세요...">
-        <button type="submit" class="btn btn-primary px-4" id="sendBtn">
-          <i class="bi bi-send"></i>
+    <div class="chatbot-footer">
+      <form id="chatForm" style="display:contents;">
+        <input type="text" class="chatbot-input" id="chatInput" placeholder="메시지를 입력하세요...">
+        <button type="submit" class="chatbot-send" id="sendBtn">
+          <i class="bi bi-send-fill"></i>
         </button>
       </form>
     </div>
