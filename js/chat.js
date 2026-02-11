@@ -387,8 +387,8 @@ const Chat = {
     let html = `
       <div class="chatbot-quiz">
         <div class="chatbot-quiz-progress mb-2">
-          <span class="badge bg-primary">${current} / ${total}</span>
-          <span class="badge ${quiz.quizType === 'choice' ? 'bg-info' : 'bg-warning'} ms-1">
+          <span class="chatbot-quiz-count">${current} / ${total}</span>
+          <span class="chatbot-quiz-type-badge ${quiz.quizType === 'choice' ? 'choice' : 'ox'}">
             ${quiz.quizType === 'choice' ? '4지선다' : 'OX퀴즈'}
           </span>
         </div>
