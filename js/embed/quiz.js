@@ -10,6 +10,7 @@ export class QuizManager {
     this.currentIndex = 0;
     this.answers = {};
     this.checked = {};
+    this.attempts = {};
   }
 
   /**
@@ -26,6 +27,7 @@ export class QuizManager {
         this.currentIndex = 0;
         this.answers = {};
         this.checked = {};
+        this.attempts = {};
         this.renderCurrentQuiz();
       } else {
         quizEl.textContent = '퀴즈가 생성되지 않았습니다.';
@@ -150,7 +152,10 @@ export class QuizManager {
       return;
     }
 
+    this.attempts[quiz.id] = (this.attempts[quiz.id] || 0) + 1;
+    const attempt = this.attempts[quiz.id];
     const isCorrect = userAnswer === quiz.answer;
+
     const resultClass = isCorrect ? 'chatbot-result-correct' : 'chatbot-result-wrong';
     const resultIcon = isCorrect ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
     const resultText = isCorrect ? '정답입니다.' : '오답입니다.';
@@ -164,18 +169,26 @@ export class QuizManager {
       </div>
     `;
 
-    if (quiz.explanation) {
-      html += `<div class="chatbot-result-explanation"><strong>해설:</strong> ${escapeHtml(quiz.explanation)}</div>`;
+    if (!isCorrect && attempt === 1) {
+      html += `<div class="chatbot-result-explanation">다시 한 번 도전해 보세요!</div>`;
+    }
+
+    if (isCorrect || attempt >= 2) {
+      if (quiz.explanation) {
+        html += `<div class="chatbot-result-explanation"><strong>해설:</strong> ${escapeHtml(quiz.explanation)}</div>`;
+      }
     }
 
     resultEl.innerHTML = html;
     resultEl.style.display = 'block';
 
-    // 정답 확인 후 다음 버튼 표시
-    this.checked[quiz.id] = true;
-    const nextBtn = document.getElementById('malgn-next-quiz');
-    const checkBtn = document.getElementById('malgn-check-answer');
-    if (nextBtn && this.currentIndex < this.quizzes.length - 1) nextBtn.style.display = '';
-    if (checkBtn) checkBtn.style.display = 'none';
+    // 정답이거나 2번째 시도 → 다음 버튼 표시
+    if (isCorrect || attempt >= 2) {
+      this.checked[quiz.id] = true;
+      const nextBtn = document.getElementById('malgn-next-quiz');
+      const checkBtn = document.getElementById('malgn-check-answer');
+      if (nextBtn && this.currentIndex < this.quizzes.length - 1) nextBtn.style.display = '';
+      if (checkBtn) checkBtn.style.display = 'none';
+    }
   }
 }

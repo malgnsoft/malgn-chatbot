@@ -370,6 +370,7 @@ const Chat = {
     this.quizzes = quizzes;
     this.quizAnswers = {};
     this.checkedQuizzes = {};
+    this.quizAttempts = {};
 
     this.showCurrentQuiz();
   },
@@ -499,7 +500,10 @@ const Chat = {
       return;
     }
 
+    this.quizAttempts[quiz.id] = (this.quizAttempts[quiz.id] || 0) + 1;
+    const attempt = this.quizAttempts[quiz.id];
     const isCorrect = userAnswer === quiz.answer;
+
     const resultClass = isCorrect ? 'text-success' : 'text-danger';
     const resultIcon = isCorrect ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
     const resultText = isCorrect ? '정답입니다!' : '오답입니다.';
@@ -510,23 +514,30 @@ const Chat = {
       </div>
     `;
 
-    if (!isCorrect) {
-      html += `<div class="text-muted small">정답: ${quiz.answer}</div>`;
+    if (!isCorrect && attempt === 1) {
+      html += `<div class="text-muted small">다시 한 번 도전해 보세요!</div>`;
     }
 
-    if (quiz.explanation) {
-      html += `<div class="text-muted small mt-1"><strong>해설:</strong> ${this.escapeHtml(quiz.explanation)}</div>`;
+    if (isCorrect || attempt >= 2) {
+      if (!isCorrect) {
+        html += `<div class="text-muted small">정답: ${quiz.answer}</div>`;
+      }
+      if (quiz.explanation) {
+        html += `<div class="text-muted small mt-1"><strong>해설:</strong> ${this.escapeHtml(quiz.explanation)}</div>`;
+      }
     }
 
     resultEl.innerHTML = html;
     resultEl.style.display = 'block';
 
-    // 정답 확인 후 다음 버튼 표시
-    this.checkedQuizzes[quiz.id] = true;
-    const nextBtn = document.getElementById('nextQuizBtn');
-    const checkBtn = document.getElementById('checkAnswerBtn');
-    if (nextBtn && this.currentQuizIndex < this.quizzes.length - 1) nextBtn.style.display = '';
-    if (checkBtn) checkBtn.style.display = 'none';
+    // 정답이거나 2번째 시도 → 다음 버튼 표시
+    if (isCorrect || attempt >= 2) {
+      this.checkedQuizzes[quiz.id] = true;
+      const nextBtn = document.getElementById('nextQuizBtn');
+      const checkBtn = document.getElementById('checkAnswerBtn');
+      if (nextBtn && this.currentQuizIndex < this.quizzes.length - 1) nextBtn.style.display = '';
+      if (checkBtn) checkBtn.style.display = 'none';
+    }
   },
 
   /**
