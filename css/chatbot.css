@@ -329,6 +329,10 @@
   flex-shrink: 0;
 }
 
+.chatbot-footer .chatbot-send svg {
+  margin-left: 2px;
+}
+
 .chatbot-footer .chatbot-send:hover {
   background: var(--chatbot-secondary);
   transform: scale(1.05);
