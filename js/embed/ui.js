@@ -88,8 +88,8 @@ export const UI = {
 
         <!-- Chat Messages -->
         <div class="chatbot-messages" id="malgn-messages">
-          <div class="message message--assistant">
-            <div class="message-content">
+          <div class="chatbot-msg chatbot-msg--assistant">
+            <div class="chatbot-msg-content">
               안녕하세요! AI 튜터입니다. 궁금한 점이 있으면 언제든 물어보세요!
             </div>
           </div>

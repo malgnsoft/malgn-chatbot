@@ -159,8 +159,8 @@ export class ChatManager {
    */
   addUserMessage(content) {
     const el = document.createElement('div');
-    el.className = 'message message--user';
-    el.innerHTML = `<div class="message-content">${escapeHtml(content)}</div>`;
+    el.className = 'chatbot-msg chatbot-msg--user';
+    el.innerHTML = `<div class="chatbot-msg-content">${escapeHtml(content)}</div>`;
     this.messagesEl.appendChild(el);
     this.scrollToBottom();
   }
@@ -170,8 +170,8 @@ export class ChatManager {
    */
   addAssistantMessage(content) {
     const el = document.createElement('div');
-    el.className = 'message message--assistant';
-    el.innerHTML = `<div class="message-content">${formatContent(content)}</div>`;
+    el.className = 'chatbot-msg chatbot-msg--assistant';
+    el.innerHTML = `<div class="chatbot-msg-content">${formatContent(content)}</div>`;
     this.messagesEl.appendChild(el);
     this.scrollToBottom();
   }
@@ -184,12 +184,12 @@ export class ChatManager {
 
     const el = document.createElement('div');
     el.id = 'malgn-typing';
-    el.className = 'message message--assistant message--typing';
+    el.className = 'chatbot-msg chatbot-msg--assistant chatbot-msg--typing';
     el.innerHTML = `
-      <div class="message-content">
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
+      <div class="chatbot-msg-content">
+        <span class="chatbot-typing-dot"></span>
+        <span class="chatbot-typing-dot"></span>
+        <span class="chatbot-typing-dot"></span>
       </div>
     `;
     this.messagesEl.appendChild(el);

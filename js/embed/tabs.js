@@ -57,7 +57,7 @@ export class TabManager {
       const summary = learning.summary;
       if (Array.isArray(summary) && summary.length > 0) {
         summaryEl.innerHTML = summary.map((s, i) =>
-          `<div class="summary-item">
+          `<div class="chatbot-summary-item">
             <span class="chatbot-badge">${i + 1}</span>${escapeHtml(s)}
           </div>`
         ).join('');
@@ -74,13 +74,13 @@ export class TabManager {
       const questions = learning.recommendedQuestions || [];
       if (questions.length > 0) {
         recommendEl.innerHTML = questions.map((q, i) =>
-          `<div class="recommend-question" data-question="${escapeHtml(q)}">
+          `<div class="chatbot-recommend-question" data-question="${escapeHtml(q)}">
             <span class="chatbot-badge chatbot-badge-primary">${i + 1}</span>${escapeHtml(q)}
           </div>`
         ).join('');
 
         // 추천 질문 클릭 → 채팅으로 전송
-        recommendEl.querySelectorAll('.recommend-question').forEach(el => {
+        recommendEl.querySelectorAll('.chatbot-recommend-question').forEach(el => {
           el.addEventListener('click', () => {
             const question = el.dataset.question;
             if (question && this.onQuestionClick) {

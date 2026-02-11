@@ -91,9 +91,9 @@ const Chat = {
    */
   addUserMessage(content) {
     const messageEl = document.createElement('div');
-    messageEl.className = 'message message--user';
+    messageEl.className = 'chatbot-msg chatbot-msg--user';
     messageEl.innerHTML = `
-      <div class="message-content">${this.escapeHtml(content)}</div>
+      <div class="chatbot-msg-content">${this.escapeHtml(content)}</div>
     `;
 
     this.chatMessages.appendChild(messageEl);
@@ -105,9 +105,9 @@ const Chat = {
    */
   addAssistantMessage(content) {
     const messageEl = document.createElement('div');
-    messageEl.className = 'message message--assistant';
+    messageEl.className = 'chatbot-msg chatbot-msg--assistant';
     messageEl.innerHTML = `
-      <div class="message-content">${this.formatContent(content)}</div>
+      <div class="chatbot-msg-content">${this.formatContent(content)}</div>
     `;
 
     this.chatMessages.appendChild(messageEl);
@@ -119,9 +119,9 @@ const Chat = {
    */
   addSystemMessage(content) {
     const messageEl = document.createElement('div');
-    messageEl.className = 'message message--assistant';
+    messageEl.className = 'chatbot-msg chatbot-msg--assistant';
     messageEl.innerHTML = `
-      <div class="message-content" style="font-style: italic; color: var(--text-secondary);">
+      <div class="chatbot-msg-content" style="font-style: italic; color: var(--text-secondary);">
         ${this.escapeHtml(content)}
       </div>
     `;
@@ -139,12 +139,12 @@ const Chat = {
 
     const indicatorEl = document.createElement('div');
     indicatorEl.id = 'typingIndicator';
-    indicatorEl.className = 'message message--assistant message--typing';
+    indicatorEl.className = 'chatbot-msg chatbot-msg--assistant chatbot-msg--typing';
     indicatorEl.innerHTML = `
-      <div class="message-content">
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
+      <div class="chatbot-msg-content">
+        <span class="chatbot-typing-dot"></span>
+        <span class="chatbot-typing-dot"></span>
+        <span class="chatbot-typing-dot"></span>
       </div>
     `;
 
@@ -261,7 +261,7 @@ const Chat = {
       if (Array.isArray(summary) && summary.length > 0) {
         // 배열인 경우 목록으로 표시
         summaryText.innerHTML = summary.map((s, i) =>
-          `<div class="summary-item mb-1">
+          `<div class="chatbot-summary-item mb-1">
             <span class="badge bg-secondary me-1">${i + 1}</span>${this.escapeHtml(s)}
           </div>`
         ).join('');
@@ -279,13 +279,13 @@ const Chat = {
       const questions = learning.recommendedQuestions || [];
       if (questions.length > 0) {
         recommendText.innerHTML = questions.map((q, i) =>
-          `<div class="recommend-question mb-2" style="cursor: pointer;" data-question="${this.escapeHtml(q)}">
+          `<div class="chatbot-recommend-question mb-2" style="cursor: pointer;" data-question="${this.escapeHtml(q)}">
             <span class="badge bg-primary me-1">${i + 1}</span>${this.escapeHtml(q)}
           </div>`
         ).join('');
 
         // 추천 질문 클릭 이벤트 - 바로 질문 전송
-        recommendText.querySelectorAll('.recommend-question').forEach(el => {
+        recommendText.querySelectorAll('.chatbot-recommend-question').forEach(el => {
           el.addEventListener('click', () => {
             const question = el.dataset.question;
             if (this.chatInput && question) {
@@ -363,17 +363,17 @@ const Chat = {
     const current = this.currentQuizIndex + 1;
 
     let html = `
-      <div class="quiz-container">
-        <div class="quiz-progress mb-2">
+      <div class="chatbot-quiz">
+        <div class="chatbot-quiz-progress mb-2">
           <span class="badge bg-primary">${current} / ${total}</span>
           <span class="badge ${quiz.quizType === 'choice' ? 'bg-info' : 'bg-warning'} ms-1">
             ${quiz.quizType === 'choice' ? '4지선다' : 'OX퀴즈'}
           </span>
         </div>
-        <div class="quiz-question mb-2">
+        <div class="chatbot-quiz-question mb-2">
           <strong>Q${current}.</strong> ${this.escapeHtml(quiz.question)}
         </div>
-        <div class="quiz-options">
+        <div class="chatbot-quiz-options">
     `;
 
     if (quiz.quizType === 'choice') {
@@ -382,8 +382,8 @@ const Chat = {
         const optionNum = i + 1;
         const isSelected = this.quizAnswers[quiz.id] === String(optionNum);
         html += `
-          <div class="quiz-option ${isSelected ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="${optionNum}">
-            <span class="option-num">${optionNum}</span> ${this.escapeHtml(option)}
+          <div class="chatbot-quiz-option ${isSelected ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="${optionNum}">
+            <span class="chatbot-option-num">${optionNum}</span> ${this.escapeHtml(option)}
           </div>
         `;
       });
@@ -392,16 +392,16 @@ const Chat = {
       const isO = this.quizAnswers[quiz.id] === 'O';
       const isX = this.quizAnswers[quiz.id] === 'X';
       html += `
-        <div class="quiz-ox-options">
-          <div class="quiz-option quiz-ox ${isO ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="O">O</div>
-          <div class="quiz-option quiz-ox ${isX ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="X">X</div>
+        <div class="chatbot-quiz-ox-options">
+          <div class="chatbot-quiz-option chatbot-quiz-ox ${isO ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="O">O</div>
+          <div class="chatbot-quiz-option chatbot-quiz-ox ${isX ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="X">X</div>
         </div>
       `;
     }
 
     html += `
         </div>
-        <div class="quiz-nav mt-3">
+        <div class="chatbot-quiz-nav mt-3">
           <button class="btn btn-sm btn-outline-secondary" id="prevQuizBtn" ${current === 1 ? 'disabled' : ''}>
             <i class="bi bi-chevron-left"></i> 이전
           </button>
@@ -410,14 +410,14 @@ const Chat = {
           </button>
           <button class="btn btn-sm btn-primary ms-2" id="checkAnswerBtn">정답 확인</button>
         </div>
-        <div class="quiz-result mt-2" id="quizResult" style="display: none;"></div>
+        <div class="chatbot-quiz-result mt-2" id="quizResult" style="display: none;"></div>
       </div>
     `;
 
     quizText.innerHTML = html;
 
     // 이벤트 바인딩
-    quizText.querySelectorAll('.quiz-option').forEach(el => {
+    quizText.querySelectorAll('.chatbot-quiz-option').forEach(el => {
       el.addEventListener('click', () => {
         const quizId = el.dataset.quizId;
         const answer = el.dataset.answer;

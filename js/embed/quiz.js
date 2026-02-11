@@ -47,17 +47,17 @@ export class QuizManager {
     const isChoice = quiz.quizType === 'choice';
 
     let html = `
-      <div class="quiz-container">
-        <div class="quiz-progress">
-          <span class="quiz-count">${current} / ${total}</span>
-          <span class="quiz-type-badge ${isChoice ? 'choice' : 'ox'}">
+      <div class="chatbot-quiz">
+        <div class="chatbot-quiz-progress">
+          <span class="chatbot-quiz-count">${current} / ${total}</span>
+          <span class="chatbot-quiz-type-badge ${isChoice ? 'choice' : 'ox'}">
             ${isChoice ? '4지선다' : 'OX퀴즈'}
           </span>
         </div>
-        <div class="quiz-question">
+        <div class="chatbot-quiz-question">
           <strong>Q${current}.</strong> ${escapeHtml(quiz.question)}
         </div>
-        <div class="quiz-options">
+        <div class="chatbot-quiz-options">
     `;
 
     if (isChoice) {
@@ -65,8 +65,8 @@ export class QuizManager {
         const optionNum = i + 1;
         const isSelected = this.answers[quiz.id] === String(optionNum);
         html += `
-          <div class="quiz-option ${isSelected ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="${optionNum}">
-            <span class="option-num">${optionNum}</span>
+          <div class="chatbot-quiz-option ${isSelected ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="${optionNum}">
+            <span class="chatbot-option-num">${optionNum}</span>
             <span>${escapeHtml(option)}</span>
           </div>
         `;
@@ -75,17 +75,17 @@ export class QuizManager {
       const isO = this.answers[quiz.id] === 'O';
       const isX = this.answers[quiz.id] === 'X';
       html += `
-        <div class="quiz-ox-options">
-          <div class="quiz-option quiz-ox ${isO ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="O">O</div>
-          <div class="quiz-option quiz-ox ${isX ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="X">X</div>
+        <div class="chatbot-quiz-ox-options">
+          <div class="chatbot-quiz-option chatbot-quiz-ox ${isO ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="O">O</div>
+          <div class="chatbot-quiz-option chatbot-quiz-ox ${isX ? 'selected' : ''}" data-quiz-id="${quiz.id}" data-answer="X">X</div>
         </div>
       `;
     }
 
     html += `
         </div>
-        <div class="quiz-nav">
-          <div class="quiz-nav-buttons">
+        <div class="chatbot-quiz-nav">
+          <div class="chatbot-quiz-nav-buttons">
             <button class="chatbot-btn chatbot-btn-outline" id="malgn-prev-quiz" ${current === 1 ? 'disabled' : ''}>
               <i class="bi bi-chevron-left"></i> 이전
             </button>
@@ -95,14 +95,14 @@ export class QuizManager {
           </div>
           <button class="chatbot-btn chatbot-btn-primary" id="malgn-check-answer">정답 확인</button>
         </div>
-        <div class="quiz-result" id="malgn-quiz-result" style="display: none;"></div>
+        <div class="chatbot-quiz-result" id="malgn-quiz-result" style="display: none;"></div>
       </div>
     `;
 
     quizEl.innerHTML = html;
 
     // 이벤트 바인딩
-    quizEl.querySelectorAll('.quiz-option').forEach(el => {
+    quizEl.querySelectorAll('.chatbot-quiz-option').forEach(el => {
       el.addEventListener('click', () => {
         this.answers[el.dataset.quizId] = el.dataset.answer;
         this.renderCurrentQuiz();
@@ -142,28 +142,28 @@ export class QuizManager {
     if (!resultEl) return;
 
     if (!userAnswer) {
-      resultEl.className = 'quiz-result';
+      resultEl.className = 'chatbot-quiz-result';
       resultEl.innerHTML = '<span class="text-warning">답을 선택해 주세요.</span>';
       resultEl.style.display = 'block';
       return;
     }
 
     const isCorrect = userAnswer === quiz.answer;
-    const resultClass = isCorrect ? 'result-correct' : 'result-wrong';
+    const resultClass = isCorrect ? 'chatbot-result-correct' : 'chatbot-result-wrong';
     const resultIcon = isCorrect ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
     const resultText = isCorrect ? '정답입니다.' : '오답입니다.';
 
     // 배경색 클래스 추가
-    resultEl.className = `quiz-result ${isCorrect ? 'correct' : 'wrong'}`;
+    resultEl.className = `chatbot-quiz-result ${isCorrect ? 'correct' : 'wrong'}`;
 
     let html = `
       <div class="${resultClass}">
-        <i class="bi ${resultIcon} result-icon"></i>${resultText}
+        <i class="bi ${resultIcon} chatbot-result-icon"></i>${resultText}
       </div>
     `;
 
     if (quiz.explanation) {
-      html += `<div class="result-explanation"><strong>해설:</strong> ${escapeHtml(quiz.explanation)}</div>`;
+      html += `<div class="chatbot-result-explanation"><strong>해설:</strong> ${escapeHtml(quiz.explanation)}</div>`;
     }
 
     resultEl.innerHTML = html;
