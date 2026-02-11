@@ -126,6 +126,77 @@ const API = {
     return this.handleResponse(response);
   },
 
+  /**
+   * 채팅 메시지 전송 (SSE 스트리밍)
+   * @param {string} message - 사용자 메시지
+   * @param {string|null} sessionId - 세션 ID
+   * @param {Function} onToken - 토큰 수신 콜백 (text)
+   * @param {Function} onDone - 완료 콜백 ({ sources, sessionId })
+   * @param {Function} onError - 에러 콜백 (error)
+   */
+  async sendMessageStream(message, sessionId = null, onToken, onDone, onError) {
+    const aiSettings = typeof Settings !== 'undefined' ? Settings.getAISettings() : {};
+
+    try {
+      const response = await fetch(`${this.getBaseUrl()}/chat/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.getAuthHeaders()
+        },
+        body: JSON.stringify({ message, sessionId, settings: aiSettings })
+      });
+
+      if (response.status === 401) {
+        this.removeApiKey();
+        window.dispatchEvent(new CustomEvent('auth:required'));
+        if (onError) onError(new Error('API Key가 유효하지 않습니다.'));
+        return;
+      }
+
+      if (!response.ok) {
+        if (onError) onError(new Error('스트리밍 요청 실패'));
+        return;
+      }
+
+      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+      let buffer = '';
+      let currentEvent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += value;
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          if (trimmed.startsWith('event: ')) {
+            currentEvent = trimmed.slice(7);
+          } else if (trimmed.startsWith('data: ')) {
+            const dataStr = trimmed.slice(6);
+            try {
+              const data = JSON.parse(dataStr);
+              if (currentEvent === 'token' && data.response && onToken) {
+                onToken(data.response);
+              } else if (currentEvent === 'done' && onDone) {
+                onDone(data);
+              } else if (currentEvent === 'error' && onError) {
+                onError(new Error(data.message));
+              }
+            } catch { /* skip invalid JSON */ }
+          }
+        }
+      }
+    } catch (error) {
+      if (onError) onError(error);
+    }
+  },
+
   // ─── 콘텐츠 ────────────────────────────────────
 
   /**

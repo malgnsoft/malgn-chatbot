@@ -111,7 +111,7 @@ export class ChatManager {
   }
 
   /**
-   * 메시지 전송
+   * 메시지 전송 (SSE 스트리밍)
    */
   async sendMessage(text) {
     const message = text || this.inputEl.value.trim();
@@ -125,33 +125,57 @@ export class ChatManager {
 
     // 로딩
     this.setLoading(true);
-    this.addTypingIndicator();
 
     try {
       // 세션 확보
       await this.ensureSession();
 
-      // 메시지 전송
-      const result = await this.api.sendMessage(
+      // 빈 AI 메시지 DOM 생성 (스트리밍으로 채워짐)
+      const el = document.createElement('div');
+      el.className = 'chatbot-msg chatbot-msg--assistant';
+      const contentEl = document.createElement('div');
+      contentEl.className = 'chatbot-msg-content';
+      contentEl.innerHTML = '<span class="chatbot-typing-dot"></span><span class="chatbot-typing-dot"></span><span class="chatbot-typing-dot"></span>';
+      el.appendChild(contentEl);
+      this.messagesEl.appendChild(el);
+      this.scrollToBottom();
+
+      let fullText = '';
+      let streaming = false;
+
+      await this.api.sendMessageStream(
         message,
         this.sessionId,
-        this.config.settings || {}
+        this.config.settings || {},
+        // onToken
+        (token) => {
+          if (!streaming) {
+            streaming = true;
+            contentEl.textContent = '';
+          }
+          fullText += token;
+          contentEl.textContent = fullText;
+          this.scrollToBottom();
+        },
+        // onDone
+        (data) => {
+          contentEl.innerHTML = formatContent(fullText);
+          this.scrollToBottom();
+          this.setLoading(false);
+        },
+        // onError
+        (error) => {
+          console.error('스트리밍 실패:', error);
+          if (!streaming) contentEl.textContent = '';
+          contentEl.innerHTML = formatContent(fullText || '오류가 발생했습니다: ' + error.message);
+          this.setLoading(false);
+        }
       );
-
-      this.removeTypingIndicator();
-
-      if (result.success) {
-        this.addAssistantMessage(result.data.response);
-      } else {
-        this.addAssistantMessage('죄송합니다. 응답을 생성할 수 없습니다.');
-      }
     } catch (error) {
       console.error('메시지 전송 실패:', error);
-      this.removeTypingIndicator();
       this.addAssistantMessage('오류가 발생했습니다: ' + error.message);
+      this.setLoading(false);
     }
-
-    this.setLoading(false);
   }
 
   /**

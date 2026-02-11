@@ -78,6 +78,60 @@ export class Api {
   }
 
   /**
+   * 채팅 메시지 전송 (SSE 스트리밍)
+   */
+  async sendMessageStream(message, sessionId, settings = {}, onToken, onDone, onError) {
+    try {
+      const response = await fetch(`${this.baseUrl}/chat/stream`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify({ message, sessionId, settings })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        if (onError) onError(new Error(error.error?.message || '스트리밍 요청 실패'));
+        return;
+      }
+
+      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+      let buffer = '';
+      let currentEvent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += value;
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          if (trimmed.startsWith('event: ')) {
+            currentEvent = trimmed.slice(7);
+          } else if (trimmed.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(trimmed.slice(6));
+              if (currentEvent === 'token' && data.response && onToken) {
+                onToken(data.response);
+              } else if (currentEvent === 'done' && onDone) {
+                onDone(data);
+              } else if (currentEvent === 'error' && onError) {
+                onError(new Error(data.message));
+              }
+            } catch { /* skip */ }
+          }
+        }
+      }
+    } catch (error) {
+      if (onError) onError(error);
+    }
+  }
+
+  /**
    * 세션 퀴즈 조회
    */
   async getQuizzes(sessionId) {
