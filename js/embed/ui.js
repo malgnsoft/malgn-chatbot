@@ -41,7 +41,7 @@ export const UI = {
       <div class="chatbot-header">
         <span class="chatbot-title">
           <i class="bi bi-mortarboard-fill chatbot-title-icon"></i>
-          AI 튜터 맑은샘
+          ${config.title || 'AI 튜터 맑은샘'}
         </span>
         <button class="chatbot-close" id="malgn-close">
           <i class="bi bi-x-lg"></i>

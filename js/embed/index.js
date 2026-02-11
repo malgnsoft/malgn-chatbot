@@ -8,6 +8,8 @@
  * window.MalgnTutor = {
  *   apiUrl: "https://malgn-chatbot-api.dotype.workers.dev",
  *   apiKey: "YOUR_API_KEY",
+ *   title: "AI 튜터 맑은샘",  // 채팅창 타이틀 (선택)
+ *   videoIframeId: "",        // 위캔디오 영상 iframe ID (선택)
  *   sessionId: 123,       // 기존 세션 ID (있으면 기존 대화 로드)
  *   courseId: 0,
  *   courseUserId: 0,
@@ -55,6 +57,8 @@ if (window.__malgnTutorLoaded) {
 
     // UI 주입
     UI.inject({
+      title: cfg.title || '',
+      videoIframeId: cfg.videoIframeId || '',
       width: cfg.width || 380,
       height: cfg.height || 650
     });
