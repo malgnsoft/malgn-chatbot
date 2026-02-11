@@ -94,8 +94,21 @@
                 </h5>
               </div>
               <div class="card-body">
-                <!-- Width -->
+                <!-- Display Mode -->
                 <div class="mb-4">
+                  <label class="form-label fw-medium">표시 방식</label>
+                  <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary mode-btn active" data-mode="layer">
+                      <i class="bi bi-layers me-1"></i>레이어
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary mode-btn" data-mode="inline">
+                      <i class="bi bi-layout-text-window me-1"></i>인라인
+                    </button>
+                  </div>
+                  <div class="form-text">레이어: 플로팅 팝업, 인라인: 특정 영역에 배치</div>
+                </div>
+                <!-- Width -->
+                <div class="mb-4" id="chatWidthGroup">
                   <label class="form-label fw-medium d-flex justify-content-between">
                     <span>가로 크기</span>
                     <span class="badge bg-secondary" id="chatWidthValue">380px</span>
@@ -103,7 +116,7 @@
                   <input type="range" class="form-range" id="chatWidthSlider" min="320" max="500" step="20" value="380">
                 </div>
                 <!-- Height -->
-                <div class="mb-0">
+                <div class="mb-0" id="chatHeightGroup">
                   <label class="form-label fw-medium d-flex justify-content-between">
                     <span>세로 크기</span>
                     <span class="badge bg-secondary" id="chatHeightValue">650px</span>
@@ -295,6 +308,22 @@
                 <div class="session-list" id="sessionList">
                   <p class="session-list__empty">채팅 기록이 없습니다</p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inline Preview Section (hidden by default) -->
+        <div class="row mt-3" id="inlinePreviewCard" hidden>
+          <div class="col-4">
+            <div class="card">
+              <div class="card-header">
+                <h5 class="card-title mb-0">
+                  <i class="bi bi-eye me-2"></i>인라인 미리보기
+                </h5>
+              </div>
+              <div class="card-body" style="padding: 0 !important;">
+                <div id="inlinePreviewContainer" style="width: 100%; height: 600px;"></div>
               </div>
             </div>
           </div>

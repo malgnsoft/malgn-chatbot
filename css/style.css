@@ -138,6 +138,13 @@
   border-color: var(--flat-border) !important;
 }
 
+/* Display Mode Buttons */
+.mode-btn.active {
+  background-color: var(--flat-primary) !important;
+  border-color: var(--flat-primary) !important;
+  color: white !important;
+}
+
 /* Settings Cards */
 .card {
   border: none !important;

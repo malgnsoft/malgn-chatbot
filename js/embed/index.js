@@ -3,23 +3,34 @@
  *
  * window.MalgnTutor 설정을 읽어 채팅 위젯을 자동 생성합니다.
  *
- * 사용법:
+ * 사용법 (레이어 모드 - 기본):
  * <script>
  * window.MalgnTutor = {
  *   apiUrl: "https://malgn-chatbot-api.dotype.workers.dev",
  *   apiKey: "YOUR_API_KEY",
- *   title: "AI 튜터 맑은샘",  // 채팅창 타이틀 (선택)
- *   videoIframeId: "",        // 위캔디오 영상 iframe ID (선택)
- *   sessionId: 123,       // 기존 세션 ID (있으면 기존 대화 로드)
- *   courseId: 0,
- *   courseUserId: 0,
- *   lessonId: 0,
- *   contentIds: [1, 2],   // sessionId 없을 때 새 세션 생성용
+ *   title: "AI 튜터 맑은샘",
+ *   sessionId: 123,
+ *   contentIds: [1, 2],
  *   settings: { persona: "...", temperature: 0.3, topP: 0.3, maxTokens: 1024 },
  *   width: 380,
  *   height: 650
  * };
  * </script>
+ *
+ * 사용법 (인라인 모드):
+ * <div id="chatbot-area" style="width:100%; height:600px;"></div>
+ * <script>
+ * window.MalgnTutor = {
+ *   mode: "inline",
+ *   container: "#chatbot-area",
+ *   apiUrl: "https://malgn-chatbot-api.dotype.workers.dev",
+ *   apiKey: "YOUR_API_KEY",
+ *   sessionId: 123,
+ *   contentIds: [1, 2],
+ *   settings: { ... }
+ * };
+ * </script>
+ *
  * <link rel="stylesheet" href="https://malgn-chatbot.pages.dev/css/chatbot.css">
  * <script src="https://malgn-chatbot.pages.dev/js/chatbot-embed.js"></script>
  */
@@ -44,6 +55,8 @@ if (window.__malgnTutorLoaded) {
       return;
     }
 
+    const isInline = cfg.mode === 'inline';
+
     // Bootstrap Icons CDN 주입 (없으면)
     if (!document.querySelector('link[href*="bootstrap-icons"]')) {
       const link = document.createElement('link');
@@ -57,6 +70,8 @@ if (window.__malgnTutorLoaded) {
 
     // UI 주입
     UI.inject({
+      mode: cfg.mode || 'layer',
+      container: cfg.container || null,
       title: cfg.title || '',
       videoIframeId: cfg.videoIframeId || '',
       width: cfg.width || 380,
@@ -98,7 +113,6 @@ if (window.__malgnTutorLoaded) {
 
     // 기존 세션 로드 후 학습 데이터 렌더링 + 퀴즈 로딩
     chatManager.onSessionLoaded = (data) => {
-      // API 응답: data = { id, learning: { goal, summary, recommendedQuestions }, messages, ... }
       if (data.learning) {
         tabManager.renderLearningData(data.learning);
       }
@@ -117,24 +131,21 @@ if (window.__malgnTutorLoaded) {
       chatManager.loadSession(cfg.sessionId);
     }
 
-    // FAB 토글
-    document.getElementById('malgn-fab').addEventListener('click', () => UI.toggle());
+    // 레이어 모드: FAB 토글 + 닫기 버튼 이벤트
+    if (!isInline) {
+      document.getElementById('malgn-fab').addEventListener('click', () => UI.toggle());
 
-    // 닫기 버튼
-    const closeBtn = document.getElementById('malgn-close');
-    console.log('[MalgnTutor] Close button found:', closeBtn);
-    if (closeBtn) {
-      closeBtn.addEventListener('click', (e) => {
-        console.log('[MalgnTutor] Close button clicked');
-        e.preventDefault();
-        e.stopPropagation();
-        UI.close();
-      });
-    } else {
-      console.error('[MalgnTutor] Close button not found!');
+      const closeBtn = document.getElementById('malgn-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          UI.close();
+        });
+      }
     }
 
-    console.log('[MalgnTutor] Initialized successfully.');
+    console.log(`[MalgnTutor] Initialized (${isInline ? 'inline' : 'layer'} mode).`);
   }
 
   // DOMContentLoaded 또는 즉시 실행

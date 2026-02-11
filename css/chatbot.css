@@ -489,6 +489,33 @@
 }
 
 /* ============================================
+   Inline Mode - 컨테이너 안에 배치
+   ============================================ */
+
+.chatbot--inline {
+  position: relative !important;
+  bottom: auto !important;
+  right: auto !important;
+  left: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+  z-index: auto;
+  border: 1px solid var(--chatbot-border);
+  box-shadow: none !important;
+}
+
+.chatbot--inline .chatbot-header {
+  display: none;
+}
+
+.chatbot--inline .chatbot-close {
+  display: none;
+}
+
+/* ============================================
    Responsive
    ============================================ */
 

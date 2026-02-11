@@ -11,6 +11,7 @@ const Settings = {
     temperature: 0.3,
     topP: 0.3,
     maxTokens: 1024,
+    displayMode: 'layer',
     chatWidth: 380,
     chatHeight: 650,
     summaryCount: 3,
@@ -45,6 +46,11 @@ const Settings = {
     this.maxTokensSlider = document.getElementById('maxTokensSlider');
     this.maxTokensValue = document.getElementById('maxTokensValue');
 
+    // 표시 방식
+    this.modeBtns = document.querySelectorAll('.mode-btn');
+    this.chatWidthGroup = document.getElementById('chatWidthGroup');
+    this.chatHeightGroup = document.getElementById('chatHeightGroup');
+
     // 채팅창 크기
     this.chatWidthSlider = document.getElementById('chatWidthSlider');
     this.chatWidthValue = document.getElementById('chatWidthValue');
@@ -74,6 +80,17 @@ const Settings = {
    * 이벤트 바인딩
    */
   bindEvents() {
+    // 표시 방식 버튼
+    this.modeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.modeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.updateSizeGroupVisibility();
+        this.saveSettings();
+        window.dispatchEvent(new CustomEvent('mode:changed', { detail: btn.dataset.mode }));
+      });
+    });
+
     // 페르소나 변경
     this.personaInput.addEventListener('change', () => this.saveSettings());
 
@@ -174,6 +191,15 @@ const Settings = {
    * 설정 적용
    */
   applySettings(settings) {
+    // 표시 방식
+    if (settings.displayMode) {
+      this.modeBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === settings.displayMode);
+      });
+      this.updateSizeGroupVisibility();
+      window.dispatchEvent(new CustomEvent('mode:changed', { detail: settings.displayMode }));
+    }
+
     // AI 설정
     if (settings.persona !== undefined) {
       this.personaInput.value = settings.persona;
@@ -230,6 +256,8 @@ const Settings = {
    */
   applyChatSize() {
     if (this.chatbot) {
+      // 인라인 모드에서는 CSS가 100%로 처리하므로 스킵
+      if (this.chatbot.classList.contains('chatbot--inline')) return;
       const width = this.chatWidthSlider.value + 'px';
       const height = this.chatHeightSlider.value + 'px';
       this.chatbot.style.setProperty('width', width, 'important');
@@ -341,6 +369,7 @@ const Settings = {
       temperature: parseFloat(this.temperatureSlider.value),
       topP: parseFloat(this.topPSlider.value),
       maxTokens: parseInt(this.maxTokensSlider.value),
+      displayMode: this.getDisplayMode(),
       chatWidth: parseInt(this.chatWidthSlider.value),
       chatHeight: parseInt(this.chatHeightSlider.value),
       summaryCount: parseInt(this.summaryCountSlider.value),
@@ -349,6 +378,23 @@ const Settings = {
       choiceQuizCount: parseInt(this.choiceQuizCountInput.value),
       oxQuizCount: parseInt(this.oxQuizCountInput.value)
     };
+  },
+
+  /**
+   * 현재 표시 방식 반환
+   */
+  getDisplayMode() {
+    const activeBtn = document.querySelector('.mode-btn.active');
+    return activeBtn ? activeBtn.dataset.mode : 'layer';
+  },
+
+  /**
+   * 표시 방식에 따라 크기 설정 표시/숨김
+   */
+  updateSizeGroupVisibility() {
+    const isInline = this.getDisplayMode() === 'inline';
+    if (this.chatWidthGroup) this.chatWidthGroup.style.display = isInline ? 'none' : '';
+    if (this.chatHeightGroup) this.chatHeightGroup.style.display = isInline ? 'none' : '';
   },
 
   /**

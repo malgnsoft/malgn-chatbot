@@ -44,6 +44,10 @@ const App = {
     this.chatbotClose = document.getElementById('chatbotClose');
     this.chatFab = document.getElementById('chatFab');
 
+    // 인라인 프리뷰
+    this.inlinePreviewCard = document.getElementById('inlinePreviewCard');
+    this.inlinePreviewContainer = document.getElementById('inlinePreviewContainer');
+
     // 탭
     this.tabs = document.querySelectorAll('.chatbot-tab[data-tab]');
     this.tabContents = document.querySelectorAll('.malgn-tab-content');
@@ -84,6 +88,9 @@ const App = {
 
     // 테넌트 변경 시 데이터 리로드
     window.addEventListener('tenant:changed', (e) => this.onTenantChanged(e.detail));
+
+    // 표시 방식 변경 시 프리뷰 모드 전환
+    window.addEventListener('mode:changed', (e) => this.switchPreviewMode(e.detail));
   },
 
   /**
@@ -165,6 +172,40 @@ const App = {
   },
 
   /**
+   * 프리뷰 모드 전환
+   */
+  switchPreviewMode(mode) {
+    const isInline = mode === 'inline';
+
+    if (isInline) {
+      // 인라인 모드: 챗봇을 프리뷰 컨테이너 안으로 이동
+      this.inlinePreviewCard.hidden = false;
+      this.inlinePreviewContainer.appendChild(this.chatbot);
+      this.chatbot.classList.add('chatbot--inline');
+      this.chatbot.hidden = false;
+      this.chatbot.style.removeProperty('width');
+      this.chatbot.style.removeProperty('max-height');
+      this.chatbot.style.removeProperty('height');
+      this.chatFab.hidden = true;
+      this.openChatBtn.hidden = true;
+      this.closeChatBtn.hidden = true;
+    } else {
+      // 레이어 모드: 챗봇을 body로 복원
+      document.body.appendChild(this.chatbot);
+      this.chatbot.classList.remove('chatbot--inline');
+      this.chatbot.hidden = true;
+      this.inlinePreviewCard.hidden = true;
+      this.chatFab.hidden = false;
+      this.openChatBtn.hidden = false;
+      this.closeChatBtn.hidden = false;
+      // 크기 재적용
+      if (typeof Settings !== 'undefined') {
+        Settings.applyChatSize();
+      }
+    }
+  },
+
+  /**
    * 탭 전환
    */
   switchTab(tabName) {
@@ -225,14 +266,12 @@ const App = {
   generateEmbedCode(apiUrl, settings, contentIds, apiKey, sessionId) {
     const persona = (settings.persona || '').replace(/"/g, '\\"').replace(/\n/g, '\\n');
     const contentIdsStr = contentIds.length > 0 ? contentIds.join(', ') : '';
+    const isInline = settings.displayMode === 'inline';
 
-    return `<!-- AI 튜터 맑은샘 -->
-<!-- LMS 연동 시 sessionId 또는 contentIds를 서버에서 동적으로 주입하세요. -->
-<link rel="stylesheet" href="https://malgn-chatbot.pages.dev/css/chatbot.css">
-<script>
-window.MalgnTutor = {
-  apiUrl: "${apiUrl}",
+    const commonSettings = `  apiUrl: "${apiUrl}",
   apiKey: "${apiKey}",
+  title: "AI 튜터 맑은샘",  /* 채팅창 타이틀 */
+  videoIframeId: "",        /* 위캔디오 영상 iframe ID */
   sessionId: ${sessionId || 0},      /* 기존 세션 ID (0이면 새 세션 생성) */
   courseId: 0,       /* LMS 코스 ID */
   courseUserId: 0,   /* LMS 수강생 ID */
@@ -246,7 +285,29 @@ window.MalgnTutor = {
     summaryCount: ${settings.summaryCount ?? 3},
     recommendCount: ${settings.recommendCount ?? 3},
     quizCount: ${settings.quizCount ?? 5}
-  },
+  }`;
+
+    if (isInline) {
+      return `<!-- AI 튜터 맑은샘 (인라인 모드) -->
+<!-- LMS 연동 시 sessionId 또는 contentIds를 서버에서 동적으로 주입하세요. -->
+<div id="malgn-chatbot-container" style="width: 100%; height: 600px;"><\/div>
+<link rel="stylesheet" href="https://malgn-chatbot.pages.dev/css/chatbot.css">
+<script>
+window.MalgnTutor = {
+  mode: "inline",
+  container: "#malgn-chatbot-container",
+${commonSettings}
+};
+<\/script>
+<script src="https://malgn-chatbot.pages.dev/js/chatbot-embed.js"><\/script>`;
+    }
+
+    return `<!-- AI 튜터 맑은샘 (레이어 모드) -->
+<!-- LMS 연동 시 sessionId 또는 contentIds를 서버에서 동적으로 주입하세요. -->
+<link rel="stylesheet" href="https://malgn-chatbot.pages.dev/css/chatbot.css">
+<script>
+window.MalgnTutor = {
+${commonSettings},
   width: ${settings.chatWidth ?? 380},
   height: ${settings.chatHeight ?? 650}
 };

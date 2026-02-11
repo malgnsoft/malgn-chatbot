@@ -3,11 +3,16 @@
  *
  * 호스트 페이지에 챗봇 위젯 HTML을 동적 생성합니다.
  * ID에 malgn- 접두어를 사용하여 충돌 방지.
+ *
+ * 모드:
+ * - layer (기본): 플로팅 팝업 + FAB 버튼
+ * - inline: 지정된 컨테이너 안에 배치
  */
 
 export const UI = {
   chatbot: null,
   fab: null,
+  isInline: false,
 
   /**
    * 채팅 위젯 HTML 주입
@@ -15,26 +20,34 @@ export const UI = {
   inject(config) {
     const width = config.width || 380;
     const height = config.height || 650;
+    this.isInline = config.mode === 'inline';
 
-    // FAB 버튼
-    const fab = document.createElement('button');
-    fab.id = 'malgn-fab';
-    fab.className = 'chat-fab';
-    fab.title = '채팅 열기';
-    fab.innerHTML = `
-      <i class="bi bi-chat-dots-fill chat-fab-icon"></i>
-      <i class="bi bi-x-lg chat-fab-close"></i>
-    `;
-    document.body.appendChild(fab);
-    this.fab = fab;
+    // 레이어 모드: FAB 버튼 생성
+    if (!this.isInline) {
+      const fab = document.createElement('button');
+      fab.id = 'malgn-fab';
+      fab.className = 'chat-fab';
+      fab.title = '채팅 열기';
+      fab.innerHTML = `
+        <i class="bi bi-chat-dots-fill chat-fab-icon"></i>
+        <i class="bi bi-x-lg chat-fab-close"></i>
+      `;
+      document.body.appendChild(fab);
+      this.fab = fab;
+    }
 
     // 챗봇 창
     const chatbot = document.createElement('div');
     chatbot.id = 'malgn-chatbot';
-    chatbot.className = 'chatbot';
-    chatbot.hidden = true;
-    chatbot.style.width = width + 'px';
-    chatbot.style.height = height + 'px';
+
+    if (this.isInline) {
+      chatbot.className = 'chatbot chatbot--inline';
+    } else {
+      chatbot.className = 'chatbot';
+      chatbot.hidden = true;
+      chatbot.style.width = width + 'px';
+      chatbot.style.height = height + 'px';
+    }
 
     chatbot.innerHTML = `
       <!-- Header -->
@@ -105,14 +118,29 @@ export const UI = {
       </div>
     `;
 
-    document.body.appendChild(chatbot);
+    // 인라인 모드: 지정된 컨테이너에 삽입
+    if (this.isInline && config.container) {
+      const target = typeof config.container === 'string'
+        ? document.querySelector(config.container)
+        : config.container;
+      if (target) {
+        target.appendChild(chatbot);
+      } else {
+        console.error('[MalgnTutor] Container not found:', config.container);
+        document.body.appendChild(chatbot);
+      }
+    } else {
+      document.body.appendChild(chatbot);
+    }
+
     this.chatbot = chatbot;
   },
 
   /**
-   * 챗봇 열기
+   * 챗봇 열기 (레이어 모드에서만 동작)
    */
   open() {
+    if (this.isInline) return;
     if (this.chatbot) this.chatbot.hidden = false;
     if (this.fab) this.fab.classList.add('active');
   },
@@ -131,21 +159,19 @@ export const UI = {
   },
 
   /**
-   * 챗봇 닫기
+   * 챗봇 닫기 (레이어 모드에서만 동작)
    */
   close() {
-    console.log('[MalgnTutor] UI.close() called', this.chatbot, this.fab);
-    if (this.chatbot) {
-      this.chatbot.hidden = true;
-      console.log('[MalgnTutor] chatbot.hidden set to true');
-    }
+    if (this.isInline) return;
+    if (this.chatbot) this.chatbot.hidden = true;
     if (this.fab) this.fab.classList.remove('active');
   },
 
   /**
-   * 챗봇 토글
+   * 챗봇 토글 (레이어 모드에서만 동작)
    */
   toggle() {
+    if (this.isInline) return;
     if (this.chatbot && this.chatbot.hidden) {
       this.open();
     } else {
