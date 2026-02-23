@@ -272,11 +272,11 @@ const App = {
   apiKey: "${apiKey}",
   title: "AI 튜터 맑은샘",  /* 채팅창 타이틀 */
   videoIframeId: "",        /* 위캔디오 영상 iframe ID */
-  sessionId: ${sessionId || 0},      /* 기존 세션 ID (0이면 새 세션 생성) */
+  parentSessionId: ${sessionId || 0},  /* 부모 세션 ID (학생별 자식 세션 자동 생성) */
   courseId: 0,       /* LMS 코스 ID */
   courseUserId: 0,   /* LMS 수강생 ID */
   lessonId: 0,       /* LMS 차시 ID */
-  contentIds: [${contentIdsStr}],  /* sessionId가 0일 때 새 세션 생성용 */
+  contentIds: [${contentIdsStr}],  /* parentSessionId가 0일 때 새 세션 생성용 */
   settings: {
     persona: "${persona}",
     temperature: ${settings.temperature ?? 0.3},

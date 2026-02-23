@@ -91,7 +91,8 @@ if (window.__malgnTutorLoaded) {
       courseId: cfg.courseId || 0,
       courseUserId: cfg.courseUserId || 0,
       lessonId: cfg.lessonId || 0,
-      settings: cfg.settings || {}
+      settings: cfg.settings || {},
+      parentSessionId: cfg.parentSessionId || 0
     });
     chatManager.init();
 
@@ -108,6 +109,17 @@ if (window.__malgnTutorLoaded) {
       }
       if (data.session && data.session.id) {
         quizManager.loadQuizzes(data.session.id);
+      }
+      // 기존 자식 세션 반환 시 메시지 렌더링
+      if (data.messages && data.messages.length > 0) {
+        chatManager.clearMessages();
+        data.messages.forEach(msg => {
+          if (msg.role === 'user') {
+            chatManager.addUserMessage(msg.content);
+          } else {
+            chatManager.addAssistantMessage(msg.content);
+          }
+        });
       }
     };
 

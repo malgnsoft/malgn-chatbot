@@ -46,6 +46,7 @@ export class Api {
     if (config.courseUserId) body.course_user_id = config.courseUserId;
     if (config.lessonId) body.lesson_id = config.lessonId;
     if (config.settings) body.settings = config.settings;
+    if (config.parentSessionId) body.parent_id = config.parentSessionId;
 
     const response = await fetch(`${this.baseUrl}/sessions`, {
       method: 'POST',
