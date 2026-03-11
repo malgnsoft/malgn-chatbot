@@ -284,7 +284,8 @@ const App = {
     maxTokens: ${settings.maxTokens ?? 1024},
     summaryCount: ${settings.summaryCount ?? 3},
     recommendCount: ${settings.recommendCount ?? 3},
-    quizCount: ${settings.quizCount ?? 5}
+    choiceCount: ${settings.choiceCount ?? 3},
+    oxCount: ${settings.oxCount ?? 2}
   }`;
 
     if (isInline) {

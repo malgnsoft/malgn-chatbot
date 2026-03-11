@@ -111,7 +111,7 @@ malgn-chatbot-user2/    ← user2 테넌트 프론트엔드 배포본
 | 테이블 | 설명 | 주요 컬럼 |
 |--------|------|-----------|
 | **TB_CONTENT** | 학습 자료 | `id`, `content_nm`, `filename`, `file_type`, `file_size`(INTEGER), `content`(전문), `lesson_id`(LMS 차시), `status` |
-| **TB_SESSION** | 채팅 세션 | `id`, `parent_id`(기본0), `session_nm`, `persona`, `temperature`, `top_p`, `max_tokens`, `summary_count`, `recommend_count`, `quiz_count`, `learning_goal`, `learning_summary`(JSON), `recommended_questions`(JSON), `course_id`, `course_user_id`, `lesson_id`, `user_id` |
+| **TB_SESSION** | 채팅 세션 | `id`, `parent_id`(기본0), `session_nm`, `persona`, `temperature`, `top_p`, `max_tokens`, `summary_count`, `recommend_count`, `choice_count`(기본3), `ox_count`(기본2), `learning_goal`, `learning_summary`(JSON), `recommended_questions`(JSON), `course_id`, `course_user_id`, `lesson_id`, `user_id` |
 | **TB_MESSAGE** | 채팅 메시지 | `id`, `session_id`(FK), `user_id`, `role`(user/assistant), `content` |
 | **TB_SESSION_CONTENT** | 세션-콘텐츠 매핑 | `session_id`(FK), `content_id`(FK), UNIQUE(session_id, content_id) 제약 |
 | **TB_QUIZ** | 자동 생성 퀴즈 | `content_id`(FK), `quiz_type`(choice/ox), `question`, `options`(JSON, choice만), `answer`, `explanation`, `position`(순서) |
@@ -192,7 +192,7 @@ window.MalgnTutor = {
   lessonId: 0,                   // LMS 레슨 ID (선택)
   contentIds: [1, 2, 3],         // 연결할 콘텐츠 ID (새 세션 시)
   settings: { persona: "...", temperature: 0.3, topP: 0.3, maxTokens: 1024,
-              summaryCount: 3, recommendCount: 3, quizCount: 5 }
+              summaryCount: 3, recommendCount: 3, choiceCount: 3, oxCount: 2 }
 };
 </script>
 <script src="https://malgn-chatbot.pages.dev/js/chatbot-embed.js"></script>

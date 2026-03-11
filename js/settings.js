@@ -16,9 +16,8 @@ const Settings = {
     chatHeight: 650,
     summaryCount: 3,
     recommendCount: 3,
-    quizCount: 5,
-    choiceQuizCount: 3,
-    oxQuizCount: 2
+    choiceCount: 3,
+    oxCount: 2
   },
 
   // 설정 저장 타이머 (디바운스용)
@@ -62,15 +61,14 @@ const Settings = {
     this.summaryCountValue = document.getElementById('summaryCountValue');
     this.recommendCountSlider = document.getElementById('recommendCountSlider');
     this.recommendCountValue = document.getElementById('recommendCountValue');
-    this.quizCountSlider = document.getElementById('quizCountSlider');
-    this.quizCountValue = document.getElementById('quizCountValue');
+    this.choiceCountSlider = document.getElementById('choiceCountSlider');
+    this.choiceCountValue = document.getElementById('choiceCountValue');
+    this.oxCountSlider = document.getElementById('oxCountSlider');
+    this.oxCountValue = document.getElementById('oxCountValue');
 
     // 퀴즈 설정 (여러 폼에 있으므로 모두 선택)
     this.choiceQuizCountInputs = document.querySelectorAll('.quiz-choice-count');
     this.oxQuizCountInputs = document.querySelectorAll('.quiz-ox-count');
-    // 첫 번째 입력을 기본값으로 사용
-    this.choiceQuizCountInput = this.choiceQuizCountInputs[0];
-    this.oxQuizCountInput = this.oxQuizCountInputs[0];
 
     // 챗봇 요소
     this.chatbot = document.getElementById('chatbot');
@@ -140,24 +138,36 @@ const Settings = {
       this.saveSettings();
     });
 
-    // 퀴즈 수 슬라이더
-    this.quizCountSlider.addEventListener('input', () => {
-      this.quizCountValue.textContent = this.quizCountSlider.value;
+    // 4지선다 수 슬라이더
+    this.choiceCountSlider.addEventListener('input', () => {
+      this.choiceCountValue.textContent = this.choiceCountSlider.value;
+      this.syncQuizInputs('choice', this.choiceCountSlider.value);
       this.saveSettings();
     });
 
-    // 4지선다 퀴즈 수 (모든 입력 필드에 이벤트 바인딩)
+    // OX 퀴즈 수 슬라이더
+    this.oxCountSlider.addEventListener('input', () => {
+      this.oxCountValue.textContent = this.oxCountSlider.value;
+      this.syncQuizInputs('ox', this.oxCountSlider.value);
+      this.saveSettings();
+    });
+
+    // 4지선다 퀴즈 수 (콘텐츠 폼 입력 필드에도 이벤트 바인딩)
     this.choiceQuizCountInputs.forEach(input => {
       input.addEventListener('change', (e) => {
         this.syncQuizInputs('choice', e.target.value);
+        this.choiceCountSlider.value = e.target.value;
+        this.choiceCountValue.textContent = e.target.value;
         this.saveSettings();
       });
     });
 
-    // OX 퀴즈 수 (모든 입력 필드에 이벤트 바인딩)
+    // OX 퀴즈 수 (콘텐츠 폼 입력 필드에도 이벤트 바인딩)
     this.oxQuizCountInputs.forEach(input => {
       input.addEventListener('change', (e) => {
         this.syncQuizInputs('ox', e.target.value);
+        this.oxCountSlider.value = e.target.value;
+        this.oxCountValue.textContent = e.target.value;
         this.saveSettings();
       });
     });
@@ -236,15 +246,15 @@ const Settings = {
       this.recommendCountSlider.value = settings.recommendCount;
       this.recommendCountValue.textContent = settings.recommendCount;
     }
-    if (settings.quizCount !== undefined) {
-      this.quizCountSlider.value = settings.quizCount;
-      this.quizCountValue.textContent = settings.quizCount;
+    if (settings.choiceCount !== undefined) {
+      this.choiceCountSlider.value = settings.choiceCount;
+      this.choiceCountValue.textContent = settings.choiceCount;
+      this.syncQuizInputs('choice', settings.choiceCount);
     }
-    if (settings.choiceQuizCount !== undefined) {
-      this.syncQuizInputs('choice', settings.choiceQuizCount);
-    }
-    if (settings.oxQuizCount !== undefined) {
-      this.syncQuizInputs('ox', settings.oxQuizCount);
+    if (settings.oxCount !== undefined) {
+      this.oxCountSlider.value = settings.oxCount;
+      this.oxCountValue.textContent = settings.oxCount;
+      this.syncQuizInputs('ox', settings.oxCount);
     }
 
     // 채팅창 크기 적용
@@ -348,15 +358,15 @@ const Settings = {
       this.recommendCountSlider.value = settings.recommendCount;
       this.recommendCountValue.textContent = settings.recommendCount;
     }
-    if (settings.quizCount !== undefined) {
-      this.quizCountSlider.value = settings.quizCount;
-      this.quizCountValue.textContent = settings.quizCount;
+    if (settings.choiceCount !== undefined) {
+      this.choiceCountSlider.value = settings.choiceCount;
+      this.choiceCountValue.textContent = settings.choiceCount;
+      this.syncQuizInputs('choice', settings.choiceCount);
     }
-    if (settings.choiceQuizCount !== undefined) {
-      this.syncQuizInputs('choice', settings.choiceQuizCount);
-    }
-    if (settings.oxQuizCount !== undefined) {
-      this.syncQuizInputs('ox', settings.oxQuizCount);
+    if (settings.oxCount !== undefined) {
+      this.oxCountSlider.value = settings.oxCount;
+      this.oxCountValue.textContent = settings.oxCount;
+      this.syncQuizInputs('ox', settings.oxCount);
     }
   },
 
@@ -374,9 +384,8 @@ const Settings = {
       chatHeight: parseInt(this.chatHeightSlider.value),
       summaryCount: parseInt(this.summaryCountSlider.value),
       recommendCount: parseInt(this.recommendCountSlider.value),
-      quizCount: parseInt(this.quizCountSlider.value),
-      choiceQuizCount: parseInt(this.choiceQuizCountInput.value),
-      oxQuizCount: parseInt(this.oxQuizCountInput.value)
+      choiceCount: parseInt(this.choiceCountSlider.value),
+      oxCount: parseInt(this.oxCountSlider.value)
     };
   },
 
@@ -399,7 +408,6 @@ const Settings = {
 
   /**
    * AI 설정만 반환 (세션 생성/업데이트용)
-   * 퀴즈 생성 옵션(choiceQuizCount, oxQuizCount)은 콘텐츠 업로드 시에만 사용
    */
   getAISettings() {
     return {
@@ -409,7 +417,8 @@ const Settings = {
       maxTokens: parseInt(this.maxTokensSlider.value),
       summaryCount: parseInt(this.summaryCountSlider.value),
       recommendCount: parseInt(this.recommendCountSlider.value),
-      quizCount: parseInt(this.quizCountSlider.value)
+      choiceCount: parseInt(this.choiceCountSlider.value),
+      oxCount: parseInt(this.oxCountSlider.value)
     };
   },
 
@@ -420,9 +429,8 @@ const Settings = {
     return {
       summaryCount: parseInt(this.summaryCountSlider.value),
       recommendCount: parseInt(this.recommendCountSlider.value),
-      quizCount: parseInt(this.quizCountSlider.value),
-      choiceQuizCount: parseInt(this.choiceQuizCountInput.value),
-      oxQuizCount: parseInt(this.oxQuizCountInput.value)
+      choiceCount: parseInt(this.choiceCountSlider.value),
+      oxCount: parseInt(this.oxCountSlider.value)
     };
   },
 
@@ -435,19 +443,9 @@ const Settings = {
   },
 
   /**
-   * 퀴즈 수 최대값 업데이트
-   * @param {number} maxQuizzes - 최대 퀴즈 수
+   * 퀴즈 수 최대값 업데이트 (미사용, 하위 호환)
    */
-  updateQuizCountMax(maxQuizzes) {
-    if (this.quizCountSlider && maxQuizzes > 0) {
-      this.quizCountSlider.max = maxQuizzes;
-      // 현재 값이 max를 초과하면 조정
-      if (parseInt(this.quizCountSlider.value) > maxQuizzes) {
-        this.quizCountSlider.value = maxQuizzes;
-        this.quizCountValue.textContent = maxQuizzes;
-        this.saveSettings();
-      }
-    }
+  updateQuizCountMax() {
   }
 };
 
