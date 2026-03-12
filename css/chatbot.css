@@ -22,6 +22,22 @@
   --chatbot-text-secondary: #6B7280;
   --chatbot-border: #E5E7EB;
   --chatbot-user-bg: #1F2937;
+
+  /* 호스트 페이지 상속 속성 차단 */
+  color: var(--chatbot-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-transform: none;
+  text-indent: 0;
+  text-shadow: none;
+  text-align: left;
+  font-style: normal;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Fallback for non-Shadow DOM usage (admin dashboard) */
