@@ -136,7 +136,7 @@ export const UI = {
 
       <!-- Chat Input -->
       <div class="chatbot-footer">
-        <input type="text" class="chatbot-input" id="malgn-input" placeholder="메시지를 입력하세요">
+        <textarea class="chatbot-input" id="malgn-input" placeholder="메시지를 입력하세요" rows="1"></textarea>
         <button class="chatbot-send" id="malgn-send">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>

@@ -38,8 +38,20 @@ export class ChatManager {
       }
     });
 
+    // textarea 높이 자동 조절
+    this.inputEl.addEventListener('input', () => this.autoResize());
+
     // 입력창 포커스 시 최신 메시지가 보이도록 하단으로 스크롤
     this.inputEl.addEventListener('focus', () => this.scrollToBottom());
+  }
+
+  /**
+   * textarea 높이 자동 조절 (최대 5줄)
+   */
+  autoResize() {
+    this.inputEl.style.height = 'auto';
+    const maxHeight = parseInt(getComputedStyle(this.inputEl).lineHeight) * 5;
+    this.inputEl.style.height = Math.min(this.inputEl.scrollHeight, maxHeight) + 'px';
   }
 
   /**
@@ -123,6 +135,7 @@ export class ChatManager {
 
     // 입력창 초기화
     this.inputEl.value = '';
+    this.inputEl.style.height = 'auto';
 
     // 사용자 메시지 표시
     this.addUserMessage(message);

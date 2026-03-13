@@ -335,18 +335,23 @@
   padding: 12px 16px;
   display: flex;
   gap: 12px;
-  align-items: center;
+  align-items: flex-end;
 }
 
 .chatbot-footer .chatbot-input {
   flex: 1;
   border: none;
   background-color: var(--chatbot-bg-alt);
-  border-radius: 24px;
-  padding: 12px 18px;
+  border-radius: 18px;
+  padding: 10px 18px;
   font-size: 14px;
   outline: none;
   transition: box-shadow 0.2s ease;
+  resize: none;
+  overflow-y: auto;
+  line-height: 1.5;
+  max-height: calc(1.5em * 5 + 20px);
+  font-family: inherit;
 }
 
 .chatbot-footer .chatbot-input::placeholder {
