@@ -279,14 +279,18 @@ const App = {
     const contentIdsStr = contentIds.length > 0 ? contentIds.join(', ') : '';
     const isInline = settings.displayMode === 'inline';
 
+    const welcomeMessage = (settings.welcomeMessage || '안녕하세요! 무엇이든 질문해 주세요.').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+
     const commonSettings = `  apiUrl: "${apiUrl}",
   apiKey: "${apiKey}",
   title: "AI 튜터 맑은샘",  /* 채팅창 타이틀 */
+  welcomeMessage: "${welcomeMessage}",  /* 웰컴 메시지 (빈 문자열이면 미표시) */
   videoIframeId: "",        /* 위캔디오 영상 iframe ID */
   parentSessionId: ${sessionId || 0},  /* 부모 세션 ID (학생별 자식 세션 자동 생성) */
   courseId: 0,       /* LMS 코스 ID */
   courseUserId: 0,   /* LMS 수강생 ID */
   lessonId: 0,       /* LMS 차시 ID */
+  userId: 0,         /* LMS 사용자 ID */
   contentIds: [${contentIdsStr}],  /* parentSessionId가 0일 때 새 세션 생성용 */
   settings: {
     persona: "${persona}",

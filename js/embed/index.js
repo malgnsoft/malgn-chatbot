@@ -88,6 +88,9 @@ if (window.__malgnTutorLoaded) {
     // Quiz 매니저
     const quizManager = new QuizManager(api, root);
 
+    // 웰컴 메시지
+    const welcomeMessage = cfg.welcomeMessage || '';
+
     // Chat 매니저
     const chatManager = new ChatManager(api, {
       contentIds: cfg.contentIds || [],
@@ -124,6 +127,9 @@ if (window.__malgnTutorLoaded) {
             chatManager.addAssistantMessage(msg.content);
           }
         });
+      } else if (welcomeMessage) {
+        // 새 세션이고 웰컴 메시지가 설정되어 있으면 표시
+        chatManager.addAssistantMessage(welcomeMessage);
       }
     };
 
@@ -135,6 +141,10 @@ if (window.__malgnTutorLoaded) {
       if (data.id) {
         quizManager.loadQuizzes(data.id);
       }
+      // 메시지가 없고 웰컴 메시지가 설정되어 있으면 표시
+      if (welcomeMessage && (!data.messages || data.messages.length === 0)) {
+        chatManager.addAssistantMessage(welcomeMessage);
+      }
     };
 
     // 추천 질문 클릭 → 채팅으로 전송
@@ -142,9 +152,11 @@ if (window.__malgnTutorLoaded) {
       chatManager.sendMessage(question);
     };
 
-    // 기존 세션 ID가 있으면 로드
+    // 기존 세션 ID가 있으면 로드, 부모 세션이 있으면 자동 세션 생성
     if (cfg.sessionId) {
       chatManager.loadSession(cfg.sessionId);
+    } else if (cfg.parentSessionId) {
+      chatManager.ensureSession();
     }
 
     // 레이어 모드: FAB 토글 + 닫기 버튼 이벤트

@@ -7,6 +7,7 @@
 const Settings = {
   // 기본 설정값 (schema.sql과 일치)
   defaults: {
+    welcomeMessage: '안녕하세요! 무엇이든 질문해 주세요.',
     persona: '당신은 친절하고 전문적인 AI 튜터입니다. 학생들이 이해하기 쉽게 설명하고, 질문에 정확하게 답변해 주세요.',
     temperature: 0.3,
     topP: 0.3,
@@ -36,6 +37,9 @@ const Settings = {
    * DOM 요소 바인딩
    */
   bindElements() {
+    // 웰컴 메시지
+    this.welcomeMessageInput = document.getElementById('welcomeMessageInput');
+
     // AI 설정
     this.personaInput = document.getElementById('personaInput');
     this.temperatureSlider = document.getElementById('temperatureSlider');
@@ -88,6 +92,9 @@ const Settings = {
         window.dispatchEvent(new CustomEvent('mode:changed', { detail: btn.dataset.mode }));
       });
     });
+
+    // 웰컴 메시지 변경
+    this.welcomeMessageInput.addEventListener('change', () => this.saveSettings());
 
     // 페르소나 변경
     this.personaInput.addEventListener('change', () => this.saveSettings());
@@ -208,6 +215,11 @@ const Settings = {
       });
       this.updateSizeGroupVisibility();
       window.dispatchEvent(new CustomEvent('mode:changed', { detail: settings.displayMode }));
+    }
+
+    // 웰컴 메시지
+    if (settings.welcomeMessage !== undefined) {
+      this.welcomeMessageInput.value = settings.welcomeMessage;
     }
 
     // AI 설정
@@ -375,6 +387,7 @@ const Settings = {
    */
   getSettings() {
     return {
+      welcomeMessage: this.welcomeMessageInput.value,
       persona: this.personaInput.value,
       temperature: parseFloat(this.temperatureSlider.value),
       topP: parseFloat(this.topPSlider.value),
