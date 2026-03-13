@@ -186,7 +186,7 @@
 }
 
 .chatbot .chatbot-tab.active::after {
-  width: 24px;
+  width: calc(100% - 16px);
 }
 
 /* Fixed Tabs */
