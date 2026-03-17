@@ -370,24 +370,42 @@ const Chat = {
       }
     }
 
-    // 추천 질문
+    // 추천 질문 (Q&A 형식)
     const recommendText = document.getElementById('recommendText');
     if (recommendText) {
       const questions = learning.recommendedQuestions || [];
       if (questions.length > 0) {
-        recommendText.innerHTML = questions.map((q, i) =>
-          `<div class="chatbot-recommend-question mb-2" style="cursor: pointer;" data-question="${this.escapeHtml(q)}">
-            <span class="badge bg-primary me-1">${i + 1}</span>${this.escapeHtml(q)}
-          </div>`
-        ).join('');
+        recommendText.innerHTML = questions.map((item, i) => {
+          const q = typeof item === 'string' ? item : (item.question || '');
+          const a = typeof item === 'object' ? (item.answer || '') : '';
+          return `<div class="chatbot-recommend-item mb-2">
+            <div class="chatbot-recommend-question" style="cursor: pointer;" data-question="${this.escapeHtml(q)}">
+              <span class="badge bg-primary me-1">${i + 1}</span>
+              <span style="flex:1;">${this.escapeHtml(q)}</span>
+              ${a ? '<span class="chatbot-recommend-toggle" style="font-size:0.7rem;color:#6B7280;margin-left:8px;">▼</span>' : ''}
+            </div>
+            ${a ? `<div class="chatbot-recommend-answer" style="display:none;padding:8px 12px;background:rgba(124,58,237,0.02);border-top:1px solid #E5E7EB;color:#6B7280;font-size:0.9em;line-height:1.6;">
+              <span style="font-weight:600;color:#7C3AED;margin-right:4px;">A.</span>${this.escapeHtml(a)}
+            </div>` : ''}
+          </div>`;
+        }).join('');
 
-        // 추천 질문 클릭 이벤트 - 바로 질문 전송
+        // 추천 질문 클릭 → 답변 토글 또는 채팅 전송
         recommendText.querySelectorAll('.chatbot-recommend-question').forEach(el => {
           el.addEventListener('click', () => {
-            const question = el.dataset.question;
-            if (this.chatInput && question) {
-              this.chatInput.value = question;
-              this.sendMessage();
+            const item = el.closest('.chatbot-recommend-item');
+            const answerEl = item?.querySelector('.chatbot-recommend-answer');
+            const toggleEl = el.querySelector('.chatbot-recommend-toggle');
+            if (answerEl) {
+              const isOpen = answerEl.style.display !== 'none';
+              answerEl.style.display = isOpen ? 'none' : 'block';
+              if (toggleEl) toggleEl.textContent = isOpen ? '▼' : '▲';
+            } else {
+              const question = el.dataset.question;
+              if (this.chatInput && question) {
+                this.chatInput.value = question;
+                this.sendMessage();
+              }
             }
           });
         });
@@ -501,13 +519,13 @@ const Chat = {
     html += `
         </div>
         <div class="chatbot-quiz-nav mt-3">
-          <button class="btn btn-sm btn-outline-secondary" id="prevQuizBtn" ${current === 1 ? 'disabled' : ''}>
-            <i class="bi bi-chevron-left"></i> 이전
+          <button class="chatbot-btn chatbot-btn-outline" id="prevQuizBtn" ${current === 1 ? 'disabled' : ''}>
+            이전
           </button>
-          <button class="btn btn-sm btn-outline-secondary ms-2" id="nextQuizBtn" ${current === total ? 'disabled' : ''} ${this.checkedQuizzes[quiz.id] ? '' : 'style="display:none"'}>
-            다음 <i class="bi bi-chevron-right"></i>
+          <button class="chatbot-btn chatbot-btn-outline" id="nextQuizBtn" ${current === total ? 'disabled' : ''} ${this.checkedQuizzes[quiz.id] ? '' : 'style="display:none"'}>
+            다음
           </button>
-          <button class="btn btn-sm btn-primary ms-2" id="checkAnswerBtn" ${this.checkedQuizzes[quiz.id] ? 'style="display:none"' : ''}>정답 확인</button>
+          <button class="chatbot-btn chatbot-btn-primary" id="checkAnswerBtn" ${this.checkedQuizzes[quiz.id] ? 'style="display:none"' : ''}>정답 확인</button>
         </div>
         <div class="chatbot-quiz-result mt-2" id="quizResult" style="display: none;"></div>
       </div>

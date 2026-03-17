@@ -82,23 +82,41 @@ export class TabManager {
       }
     }
 
-    // 추천 질문
+    // 추천 질문 (Q&A 형식)
     const recommendEl = this.root.querySelector('#malgn-recommend-text');
     if (recommendEl) {
       const questions = learning.recommendedQuestions || [];
       if (questions.length > 0) {
-        recommendEl.innerHTML = questions.map((q, i) =>
-          `<div class="chatbot-recommend-question" data-question="${escapeHtml(q)}">
-            <span class="chatbot-badge chatbot-badge-primary">${i + 1}</span>${escapeHtml(q)}
-          </div>`
-        ).join('');
+        recommendEl.innerHTML = questions.map((item, i) => {
+          // 하위 호환: 문자열이면 질문만 표시
+          const q = typeof item === 'string' ? item : (item.question || '');
+          const a = typeof item === 'object' ? (item.answer || '') : '';
+          return `<div class="chatbot-recommend-item">
+            <div class="chatbot-recommend-question" data-question="${escapeHtml(q)}">
+              <span class="chatbot-badge chatbot-badge-primary">${i + 1}</span>
+              <span class="chatbot-recommend-q-text">${escapeHtml(q)}</span>
+              ${a ? '<span class="chatbot-recommend-toggle">▼</span>' : ''}
+            </div>
+            ${a ? `<div class="chatbot-recommend-answer" style="display:none;">
+              <span class="chatbot-recommend-a-label">A.</span> ${escapeHtml(a)}
+            </div>` : ''}
+          </div>`;
+        }).join('');
 
-        // 추천 질문 클릭 → 채팅으로 전송
+        // 질문 클릭 → 답변 토글
         recommendEl.querySelectorAll('.chatbot-recommend-question').forEach(el => {
           el.addEventListener('click', () => {
-            const question = el.dataset.question;
-            if (question && this.onQuestionClick) {
-              this.onQuestionClick(question);
+            const item = el.closest('.chatbot-recommend-item');
+            const answerEl = item?.querySelector('.chatbot-recommend-answer');
+            const toggleEl = el.querySelector('.chatbot-recommend-toggle');
+            if (answerEl) {
+              const isOpen = answerEl.style.display !== 'none';
+              answerEl.style.display = isOpen ? 'none' : 'block';
+              if (toggleEl) toggleEl.textContent = isOpen ? '▼' : '▲';
+            } else if (this.onQuestionClick) {
+              // 답변 없으면 채팅으로 전송
+              const question = el.dataset.question;
+              if (question) this.onQuestionClick(question);
             }
           });
         });

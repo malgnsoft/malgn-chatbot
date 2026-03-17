@@ -1021,12 +1021,26 @@
 }
 
 /* Recommend question (embed용) */
-.chatbot .chatbot-recommend-question {
+.chatbot .chatbot-recommend-item {
   margin-bottom: 10px;
-  padding: 14px 16px;
-  background: rgba(124, 58, 237, 0.04);
   border: 1.5px solid var(--chatbot-primary-light);
   border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.chatbot .chatbot-recommend-item:last-child {
+  margin-bottom: 0;
+}
+
+.chatbot .chatbot-recommend-item:hover {
+  border-color: var(--chatbot-primary);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
+}
+
+.chatbot .chatbot-recommend-question {
+  padding: 14px 16px;
+  background: rgba(124, 58, 237, 0.04);
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -1036,12 +1050,31 @@
 
 .chatbot .chatbot-recommend-question:hover {
   background: rgba(124, 58, 237, 0.08);
-  border-color: var(--chatbot-primary);
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
 }
 
-.chatbot .chatbot-recommend-question:last-child {
-  margin-bottom: 0;
+.chatbot .chatbot-recommend-q-text {
+  flex: 1;
+}
+
+.chatbot .chatbot-recommend-toggle {
+  font-size: 0.7rem;
+  color: var(--chatbot-text-secondary);
+  margin-left: 8px;
+}
+
+.chatbot .chatbot-recommend-answer {
+  padding: 12px 16px 14px;
+  background: rgba(124, 58, 237, 0.02);
+  border-top: 1px solid var(--chatbot-border);
+  color: var(--chatbot-text-secondary);
+  font-size: 0.9em;
+  line-height: 1.6;
+}
+
+.chatbot .chatbot-recommend-a-label {
+  font-weight: 600;
+  color: var(--chatbot-primary);
+  margin-right: 4px;
 }
 
 .chatbot .chatbot-recommend-question .chatbot-badge {
