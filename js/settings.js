@@ -18,7 +18,8 @@ const Settings = {
     summaryCount: 3,
     recommendCount: 3,
     choiceCount: 3,
-    oxCount: 2
+    oxCount: 2,
+    quizDifficulty: 'normal'
   },
 
   // 설정 저장 타이머 (디바운스용)
@@ -73,6 +74,7 @@ const Settings = {
     // 퀴즈 설정 (여러 폼에 있으므로 모두 선택)
     this.choiceQuizCountInputs = document.querySelectorAll('.quiz-choice-count');
     this.oxQuizCountInputs = document.querySelectorAll('.quiz-ox-count');
+    this.difficultyBtns = document.querySelectorAll('.difficulty-btn');
 
     // 챗봇 요소
     this.chatbot = document.getElementById('chatbot');
@@ -178,6 +180,15 @@ const Settings = {
         this.saveSettings();
       });
     });
+
+    // 퀴즈 난이도 버튼
+    this.difficultyBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.difficultyBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.saveSettings();
+      });
+    });
   },
 
   /**
@@ -267,6 +278,11 @@ const Settings = {
       this.oxCountSlider.value = settings.oxCount;
       this.oxCountValue.textContent = settings.oxCount;
       this.syncQuizInputs('ox', settings.oxCount);
+    }
+    if (settings.quizDifficulty) {
+      this.difficultyBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.difficulty === settings.quizDifficulty);
+      });
     }
 
     // 채팅창 크기 적용
@@ -380,6 +396,11 @@ const Settings = {
       this.oxCountValue.textContent = settings.oxCount;
       this.syncQuizInputs('ox', settings.oxCount);
     }
+    if (settings.quizDifficulty) {
+      this.difficultyBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.difficulty === settings.quizDifficulty);
+      });
+    }
   },
 
   /**
@@ -398,8 +419,17 @@ const Settings = {
       summaryCount: parseInt(this.summaryCountSlider.value),
       recommendCount: parseInt(this.recommendCountSlider.value),
       choiceCount: parseInt(this.choiceCountSlider.value),
-      oxCount: parseInt(this.oxCountSlider.value)
+      oxCount: parseInt(this.oxCountSlider.value),
+      quizDifficulty: this.getQuizDifficulty()
     };
+  },
+
+  /**
+   * 현재 퀴즈 난이도 반환
+   */
+  getQuizDifficulty() {
+    const activeBtn = document.querySelector('.difficulty-btn.active');
+    return activeBtn ? activeBtn.dataset.difficulty : 'normal';
   },
 
   /**
@@ -431,7 +461,8 @@ const Settings = {
       summaryCount: parseInt(this.summaryCountSlider.value),
       recommendCount: parseInt(this.recommendCountSlider.value),
       choiceCount: parseInt(this.choiceCountSlider.value),
-      oxCount: parseInt(this.oxCountSlider.value)
+      oxCount: parseInt(this.oxCountSlider.value),
+      quizDifficulty: this.getQuizDifficulty()
     };
   },
 
