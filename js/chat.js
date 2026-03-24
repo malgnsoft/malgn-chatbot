@@ -663,11 +663,10 @@ const Chat = {
   },
 
   /**
-   * 채팅 기록 초기화
+   * 채팅 기록 초기화 (세션 유지, 메시지만 삭제)
    */
   clearChat() {
     this.chatMessages.innerHTML = '';
-    this.sessionId = null;
     this.addAssistantMessage('안녕하세요! AI 튜터입니다. 궁금한 점이 있으면 언제든 물어보세요!');
   }
 };
