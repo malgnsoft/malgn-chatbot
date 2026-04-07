@@ -11,20 +11,20 @@ const Tenants = {
     {
       id: 'default',
       name: '기본',
-      apiUrl: 'https://malgn-chatbot-api.dotype.workers.dev',
+      apiUrl: 'https://malgn-chatbot-api.malgnsoft.workers.dev',
       apiKey: '5Ot1la9ausoT0QUT4KsZlFwoW4TGIjb7NcIr1bKj'
     },
     {
       id: 'user2',
       name: 'User2',
-      apiUrl: 'https://malgn-chatbot-api-user2.dotype.workers.dev',
+      apiUrl: 'https://malgn-chatbot-api-user2.malgnsoft.workers.dev',
       apiKey: 'aO8XJ82M5TVNYBbA65qdOAI4mDQmp8g8V59uKm7J'
     }
     // 새 테넌트 추가 예시:
     // {
     //   id: 'user3',
     //   name: 'User3',
-    //   apiUrl: 'https://malgn-chatbot-api-user3.dotype.workers.dev',
+    //   apiUrl: 'https://malgn-chatbot-api-user3.malgnsoft.workers.dev',
     //   apiKey: 'YOUR_API_KEY'
     // }
   ],

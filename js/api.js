@@ -7,9 +7,9 @@
 // API 기본 URL (환경에 따라 자동 선택)
 // 프로덕션 도메인이 아니면 로컬 API 서버 사용 (Live Server, localhost 등 지원)
 const isProduction = window.location.hostname.includes('pages.dev') ||
-                     window.location.hostname.includes('dotype.workers.dev');
+                     window.location.hostname.includes('malgnsoft.workers.dev');
 const API_BASE_URL = isProduction
-  ? 'https://malgn-chatbot-api.dotype.workers.dev'
+  ? 'https://malgn-chatbot-api.malgnsoft.workers.dev'
   : 'http://localhost:8787';
 
 /**

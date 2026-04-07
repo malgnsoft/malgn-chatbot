@@ -7,7 +7,7 @@
  * 사용법 (레이어 모드 - 기본):
  * <script>
  * window.MalgnTutor = {
- *   apiUrl: "https://malgn-chatbot-api.dotype.workers.dev",
+ *   apiUrl: "https://malgn-chatbot-api.malgnsoft.workers.dev",
  *   apiKey: "YOUR_API_KEY",
  *   title: "AI 튜터 맑은샘",
  *   sessionId: 123,
@@ -25,7 +25,7 @@
  * window.MalgnTutor = {
  *   mode: "inline",
  *   container: "#chatbot-area",
- *   apiUrl: "https://malgn-chatbot-api.dotype.workers.dev",
+ *   apiUrl: "https://malgn-chatbot-api.malgnsoft.workers.dev",
  *   apiKey: "YOUR_API_KEY",
  *   sessionId: 123,
  *   contentIds: [1, 2],
