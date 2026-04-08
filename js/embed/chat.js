@@ -78,9 +78,14 @@ export class ChatManager {
         if (this.onSessionLoaded) {
           this.onSessionLoaded(result.data);
         }
+      } else {
+        // 세션을 찾을 수 없으면 초기화하여 새 세션 생성 유도
+        console.warn('세션을 찾을 수 없습니다. 새 세션으로 시작합니다.');
+        this.sessionId = null;
       }
     } catch (error) {
       console.error('세션 로드 실패:', error);
+      this.sessionId = null;
     }
   }
 
@@ -89,6 +94,25 @@ export class ChatManager {
    */
   clearMessages() {
     this.messagesEl.innerHTML = '';
+  }
+
+  /**
+   * 시스템 안내 메시지 표시 (생성중 등)
+   */
+  showSystemMessage(text) {
+    const el = document.createElement('div');
+    el.className = 'chatbot-msg chatbot-msg--system chatbot-system-message';
+    el.innerHTML = `<div class="chatbot-msg-content" style="background: #f3f0ff; color: #6D28D9; text-align: center; font-size: 13px;">${text}</div>`;
+    this.messagesEl.appendChild(el);
+    this.scrollToBottom();
+  }
+
+  /**
+   * 시스템 메시지 제거
+   */
+  removeSystemMessage() {
+    const el = this.messagesEl.querySelector('.chatbot-system-message');
+    if (el) el.remove();
   }
 
   /**
@@ -102,7 +126,7 @@ export class ChatManager {
       this.onSessionCreating();
     }
 
-    const result = await this.api.createSession(
+    let result = await this.api.createSession(
       this.config.contentIds || [],
       {
         courseId: this.config.courseId,
@@ -110,9 +134,27 @@ export class ChatManager {
         lessonId: this.config.lessonId,
         userId: this.config.userId,
         settings: this.config.settings,
-        parentSessionId: this.config.parentSessionId
+        parentSessionId: this.config.parentSessionId,
+        chatContentIds: this.config.chatContentIds
       }
     );
+
+    // 부모 세션이 없어서 실패 시 독립 세션으로 재시도
+    if (!result.success && this.config.parentSessionId) {
+      console.warn('부모 세션을 찾을 수 없어 독립 세션으로 생성합니다.');
+      result = await this.api.createSession(
+        this.config.contentIds || [],
+        {
+          courseId: this.config.courseId,
+          courseUserId: this.config.courseUserId,
+          lessonId: this.config.lessonId,
+          userId: this.config.userId,
+          settings: this.config.settings,
+          parentSessionId: 0,
+          chatContentIds: this.config.chatContentIds
+        }
+      );
+    }
 
     if (result.success) {
       this.sessionId = result.data.session.id;

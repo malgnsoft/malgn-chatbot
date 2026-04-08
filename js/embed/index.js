@@ -108,14 +108,16 @@ if (window.__malgnTutorLoaded) {
     }, root);
     chatManager.init();
 
-    // 세션 생성 시작 → FAB 로딩 표시
+    // 세션 생성 시작 → FAB 로딩 + 안내 메시지 표시
     chatManager.onSessionCreating = () => {
       UI.setFabLoading(true);
+      chatManager.showSystemMessage('AI 학습 세션을 생성중입니다. 잠시만 기다려주세요...');
     };
 
     // 세션 생성 후 학습 데이터 렌더링 + 퀴즈 로딩
     chatManager.onSessionCreated = (data) => {
       UI.setFabLoading(false);
+      chatManager.removeSystemMessage();
       if (data.learning) {
         tabManager.renderLearningData(data.learning);
       }
