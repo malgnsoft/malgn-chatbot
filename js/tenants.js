@@ -12,13 +12,15 @@ const Tenants = {
       id: 'default',
       name: '기본',
       apiUrl: 'https://malgn-chatbot-api.malgnsoft.workers.dev',
-      apiKey: '5Ot1la9ausoT0QUT4KsZlFwoW4TGIjb7NcIr1bKj'
+      apiKey: '5Ot1la9ausoT0QUT4KsZlFwoW4TGIjb7NcIr1bKj',
+      siteId: 1
     },
     {
       id: 'user2',
       name: 'User2',
       apiUrl: 'https://malgn-chatbot-api-user2.malgnsoft.workers.dev',
-      apiKey: 'aO8XJ82M5TVNYBbA65qdOAI4mDQmp8g8V59uKm7J'
+      apiKey: 'aO8XJ82M5TVNYBbA65qdOAI4mDQmp8g8V59uKm7J',
+      siteId: 1
     }
     // 새 테넌트 추가 예시:
     // {
@@ -112,10 +114,11 @@ const Tenants = {
     const tenant = this.getCurrentTenant();
     if (!tenant) return;
 
-    // API 기본 URL 설정
+    // API 기본 URL 및 사이트 ID 설정
     if (typeof API !== 'undefined') {
       API.setBaseUrl(tenant.apiUrl);
       API.setApiKey(tenant.apiKey);
+      API.setSiteId(tenant.siteId || 0);
     }
   },
 

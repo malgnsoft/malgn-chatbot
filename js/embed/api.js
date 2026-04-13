@@ -2,9 +2,10 @@
  * API Client for embed widget
  */
 export class Api {
-  constructor(baseUrl, apiKey) {
+  constructor(baseUrl, apiKey, siteId = 0) {
     this.baseUrl = baseUrl;
     this.apiKey = apiKey;
+    this.siteId = siteId;
   }
 
   /**
@@ -14,6 +15,9 @@ export class Api {
     const headers = {};
     if (this.apiKey) {
       headers['Authorization'] = `Bearer ${this.apiKey}`;
+    }
+    if (this.siteId) {
+      headers['X-Site-Id'] = String(this.siteId);
     }
     if (json) {
       headers['Content-Type'] = 'application/json';

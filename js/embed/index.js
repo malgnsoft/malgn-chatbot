@@ -67,7 +67,7 @@ if (window.__malgnTutorLoaded) {
     }
 
     // API 클라이언트
-    const api = new Api(cfg.apiUrl, cfg.apiKey);
+    const api = new Api(cfg.apiUrl, cfg.apiKey, cfg.siteId || 1);
 
     // UI 주입 (Shadow DOM 생성)
     UI.inject({

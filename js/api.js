@@ -63,14 +63,33 @@ const API = {
   },
 
   /**
+   * Site ID 저장
+   */
+  setSiteId(siteId) {
+    this.siteId = siteId;
+  },
+
+  /**
+   * Site ID 조회
+   */
+  getSiteId() {
+    return this.siteId || 1;
+  },
+
+  /**
    * Authorization 헤더 반환
    */
   getAuthHeaders() {
+    const headers = {};
     const apiKey = this.getApiKey();
     if (apiKey) {
-      return { 'Authorization': `Bearer ${apiKey}` };
+      headers['Authorization'] = `Bearer ${apiKey}`;
     }
-    return {};
+    const siteId = this.getSiteId();
+    if (siteId) {
+      headers['X-Site-Id'] = String(siteId);
+    }
+    return headers;
   },
 
   /**
