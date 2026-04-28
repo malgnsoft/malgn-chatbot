@@ -529,6 +529,10 @@
   to { transform: rotate(360deg); }
 }
 
+@keyframes chatbot-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Pulse Animation */
 .chat-fab::before {
   content: '';
@@ -578,13 +582,14 @@
   right: auto !important;
   left: auto !important;
   width: 100% !important;
-  height: 100% !important;
+  height: calc(100% - 2px) !important;
   max-width: none !important;
   max-height: none !important;
   border-radius: 0 !important;
   z-index: auto;
-  border: 1px solid var(--chatbot-border);
+  border: none !important;
   box-shadow: none !important;
+  overflow: hidden;
 }
 
 .chatbot--inline .chatbot-header {
@@ -593,6 +598,17 @@
 
 .chatbot--inline .chatbot-close {
   display: none;
+}
+
+.chatbot--inline .chatbot-body {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.chatbot--inline .chatbot-messages {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* ============================================

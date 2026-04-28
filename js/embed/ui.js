@@ -29,7 +29,7 @@ export const UI = {
     const host = document.createElement('div');
     host.id = 'malgn-tutor-host';
     if (this.isInline) {
-      host.style.cssText = 'display:block;width:100%;height:100%;';
+      host.style.cssText = 'display:flex;flex-direction:column;width:100%;height:100%;overflow:hidden;';
     }
 
     // Shadow Root 생성
@@ -156,6 +156,10 @@ export const UI = {
         ? document.querySelector(config.container)
         : config.container;
       if (target) {
+        // 인라인 모드: 기존 콘텐츠 제거 후 챗봇 삽입
+        target.textContent = '';
+        document.body.style.overflow = 'hidden';
+        target.style.overflow = 'hidden';
         target.appendChild(host);
       } else {
         console.error('[MalgnTutor] Container not found:', config.container);

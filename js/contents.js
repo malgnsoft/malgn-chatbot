@@ -48,6 +48,19 @@ const Contents = {
       return;
     }
 
+    // card-body를 flex 컬럼으로 설정하여 documentList가 남은 공간을 채우도록 함
+    const cardBody = this.contentList.closest('.card-body');
+    if (cardBody) {
+      cardBody.style.display = 'flex';
+      cardBody.style.flexDirection = 'column';
+      cardBody.style.overflow = 'hidden';
+      cardBody.style.flex = '1';
+      cardBody.style.minHeight = '0';
+    }
+    this.contentList.style.flex = '1';
+    this.contentList.style.overflowY = 'auto';
+    this.contentList.style.minHeight = '0';
+
     this.bindEvents();
     this.loadContents();
   },

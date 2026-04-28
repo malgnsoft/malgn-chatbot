@@ -101,10 +101,20 @@ export class ChatManager {
    */
   showSystemMessage(text) {
     const el = document.createElement('div');
-    el.className = 'chatbot-msg chatbot-msg--system chatbot-system-message';
-    el.innerHTML = `<div class="chatbot-msg-content" style="background: #f3f0ff; color: #6D28D9; text-align: center; font-size: 13px;">${text}</div>`;
+    el.className = 'chatbot-system-message';
+    el.style.cssText = `
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 60px 20px; color: #6D28D9; font-size: 14px;
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.95);
+    `;
+    el.innerHTML = `
+      <div style="width: 40px; height: 40px; border: 3px solid #e9e5f5; border-top: 3px solid #7C3AED; border-radius: 50%; animation: chatbot-spin 1s linear infinite; margin-bottom: 16px;"></div>
+      <div style="font-weight: 600; margin-bottom: 6px;">${text}</div>
+      <div style="font-size: 12px; color: #9CA3AF;">학습 목표, 요약, 퀴즈를 준비하고 있습니다</div>
+    `;
+    this.messagesEl.style.position = 'relative';
     this.messagesEl.appendChild(el);
-    this.scrollToBottom();
   }
 
   /**
@@ -219,7 +229,9 @@ export class ChatManager {
         },
         // onDone
         (data) => {
-          contentEl.innerHTML = formatContent(fullText);
+          // 서버가 잘림 감지 후 요약본을 보낸 경우 교체 표시
+          const finalText = (data && data.sanitizedResponse) ? data.sanitizedResponse : fullText;
+          contentEl.innerHTML = formatContent(finalText);
           renderMath(contentEl);
           this.scrollToBottom();
           this.setLoading(false);

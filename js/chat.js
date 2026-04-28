@@ -104,8 +104,9 @@ const Chat = {
       // onDone
       (data) => {
         if (data.sessionId) this.sessionId = data.sessionId;
-        // 최종 포맷팅 (줄바꿈 처리)
-        contentEl.innerHTML = this.formatContent(fullText);
+        // 서버가 잘림 감지 후 요약본을 보낸 경우 교체 표시
+        const finalText = (data && data.sanitizedResponse) ? data.sanitizedResponse : fullText;
+        contentEl.innerHTML = this.formatContent(finalText);
         this.scrollToBottom();
         this.setLoading(false);
       },

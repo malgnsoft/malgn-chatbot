@@ -168,6 +168,7 @@
   padding: 20px !important;
 }
 
+
 .card-title {
   color: var(--flat-text) !important;
   font-weight: 600 !important;
@@ -450,9 +451,11 @@ h1, h5.card-title {
   color: var(--flat-text);
 }
 
-/* Document List */
-.document-list {
-  /* 높이 제한 없이 자연스럽게 확장 */
+/* Middle Panel - card-body flex for scrollable document list */
+#documentList {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .document-list__empty {
@@ -868,3 +871,4 @@ h1, h5.card-title {
     flex: 1;
   }
 }
+/* v20260414 */

@@ -134,8 +134,9 @@ if (window.__malgnTutorLoaded) {
             chatManager.addAssistantMessage(msg.content);
           }
         });
-      } else if (welcomeMessage) {
-        // 새 세션이고 웰컴 메시지가 설정되어 있으면 표시
+      }
+      // 메시지 영역이 비어있고 웰컴 메시지가 있으면 1회만 표시
+      if (welcomeMessage && chatManager.messagesEl.children.length === 0) {
         chatManager.addAssistantMessage(welcomeMessage);
       }
     };
@@ -148,8 +149,8 @@ if (window.__malgnTutorLoaded) {
       if (data.id) {
         quizManager.loadQuizzes(data.id);
       }
-      // 메시지가 없고 웰컴 메시지가 설정되어 있으면 표시
-      if (welcomeMessage && (!data.messages || data.messages.length === 0)) {
+      // 메시지 영역이 비어있고 웰컴 메시지가 있으면 표시
+      if (welcomeMessage && chatManager.messagesEl.children.length === 0) {
         chatManager.addAssistantMessage(welcomeMessage);
       }
     };
@@ -159,10 +160,10 @@ if (window.__malgnTutorLoaded) {
       chatManager.sendMessage(question);
     };
 
-    // 기존 세션 ID가 있으면 로드, 부모 세션이 있으면 자동 세션 생성
+    // 기존 세션 ID가 있으면 로드, 부모 세션 또는 콘텐츠가 있으면 자동 세션 생성
     if (cfg.sessionId) {
       chatManager.loadSession(cfg.sessionId);
-    } else if (cfg.parentSessionId) {
+    } else if (cfg.parentSessionId || (cfg.contentIds && cfg.contentIds.length > 0)) {
       chatManager.ensureSession();
     }
 
