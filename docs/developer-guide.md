@@ -52,8 +52,9 @@ Malgn Chatbot은 LMS(학습관리시스템)에 임베드하여 사용하는 **RA
 │  Pages       │  Workers     │  AI                   │
 │  (프론트엔드) │  (백엔드 API) │  (LLM + Embedding)    │
 ├──────────────┼──────────────┼───────────────────────┤
-│  D1 (SQLite) │  Vectorize   │  KV (캐시)            │
-│              │  (벡터 검색)  │  R2 (파일 스토리지)    │
+│  Hyperdrive  │  Vectorize   │  KV (캐시)            │
+│  → Aurora    │  (벡터 검색)  │  R2 (파일 스토리지)    │
+│    MySQL     │              │                       │
 └──────────────┴──────────────┴───────────────────────┘
 ```
 
@@ -61,11 +62,11 @@ Malgn Chatbot은 LMS(학습관리시스템)에 임베드하여 사용하는 **RA
 |------|------|
 | 프론트엔드 | Vanilla JS, Bootstrap 5, esbuild (IIFE 번들링) |
 | 백엔드 | Cloudflare Workers, Hono 프레임워크 |
-| DB | Cloudflare D1 (SQLite) |
-| 벡터 DB | Cloudflare Vectorize (768차원, 코사인 유사도) |
-| AI 모델 (채팅) | `@cf/meta/llama-3.1-8b-instruct` |
-| AI 모델 (학습/퀴즈) | `@cf/meta/llama-3.1-70b-instruct` |
-| 임베딩 모델 | `@cf/baai/bge-base-en-v1.5` (768차원) |
+| DB | Aurora MySQL (Cloudflare Hyperdrive 경유) |
+| 벡터 DB | Cloudflare Vectorize (1024차원, 코사인 유사도) |
+| AI 모델 (채팅) | `@cf/google/gemma-3-12b-it` |
+| AI 모델 (학습/퀴즈) | `@cf/google/gemma-3-12b-it` |
+| 임베딩 모델 | `@cf/baai/bge-m3` (1024차원, 다국어) |
 | AI Gateway | Cloudflare AI Gateway (cache 3600s) |
 
 ---
@@ -119,20 +120,27 @@ OPENAI_API_KEY=sk-xxx          # 선택: OpenAI 연동 시
 
 > **주의**: `.dev.vars`는 `.gitignore`에 포함되어 있다. 절대 커밋하지 않는다.
 
-### 2.5 D1 로컬 데이터베이스
+### 2.5 로컬 Aurora MySQL 연결
 
-Wrangler dev 모드에서 D1은 자동으로 로컬 SQLite를 생성한다.
+로컬 개발 시에는 Hyperdrive를 사용하지 않고, 로컬 MySQL 또는 dev 환경 Aurora MySQL에 직접 접속한다. `.dev.vars`에 connection 정보를 정의하고 자체 DB 헬퍼가 이를 사용한다.
 
 ```bash
-# 스키마 초기 적용
-wrangler d1 execute malgn-chatbot-db --local --file=./schema.sql
+# 전체 스키마 초기 적용
+mysql -h <HOST> -u <USER> -p <DATABASE> < schema.mysql.sql
 
 # 마이그레이션 적용
-wrangler d1 execute malgn-chatbot-db --local --file=./migrations/001_quiz_content_based.sql
-wrangler d1 execute malgn-chatbot-db --local --file=./migrations/002_session_course_fields.sql
-wrangler d1 execute malgn-chatbot-db --local --file=./migrations/003_session_parent_id.sql
-wrangler d1 execute malgn-chatbot-db --local --file=./migrations/004_content_lesson_id.sql
-wrangler d1 execute malgn-chatbot-db --local --file=./migrations/005_session_quiz_difficulty.sql
+mysql -h <HOST> -u <USER> -p <DATABASE> < migrations/001_quiz_content_based.sql
+mysql -h <HOST> -u <USER> -p <DATABASE> < migrations/002_session_course_fields.sql
+mysql -h <HOST> -u <USER> -p <DATABASE> < migrations/003_session_parent_id.sql
+mysql -h <HOST> -u <USER> -p <DATABASE> < migrations/004_content_lesson_id.sql
+mysql -h <HOST> -u <USER> -p <DATABASE> < migrations/005_session_quiz_difficulty.sql
+mysql -h <HOST> -u <USER> -p <DATABASE> < migrations/005_session_quiz_split.sql
+mysql -h <HOST> -u <USER> -p <DATABASE> < migrations/006_quiz_session_id.sql
+mysql -h <HOST> -u <USER> -p <DATABASE> < migrations/006_session_generation_status.sql
+mysql -h <HOST> -u <USER> -p <DATABASE> < migrations/007_session_chat_content_ids.sql
+mysql -h <HOST> -u <USER> -p <DATABASE> < migrations/008_add_site_id.sql
+mysql -h <HOST> -u <USER> -p <DATABASE> < migrations/009_ai_log.sql
+mysql -h <HOST> -u <USER> -p <DATABASE> < migrations/010_ai_log_lesson_id.sql
 ```
 
 ---
@@ -203,8 +211,8 @@ malgn-chatbot-api/
 │   ├── services/
 │   │   ├── chatService.js      # RAG 파이프라인 핵심 (벡터 검색 → LLM)
 │   │   ├── contentService.js   # 파일 업로드·텍스트 추출·임베딩
-│   │   ├── embeddingService.js # 텍스트 → 768차원 벡터 변환
-│   │   ├── learningService.js  # 학습 메타데이터 생성 (70B LLM)
+│   │   ├── embeddingService.js # 텍스트 → 1024차원 벡터 변환
+│   │   ├── learningService.js  # 학습 메타데이터 생성 (Gemma 3 12B)
 │   │   ├── quizService.js      # 퀴즈 생성 (4지선다 + OX)
 │   │   ├── openaiService.js    # OpenAI 연동 (선택)
 │   │   └── userService.js      # 사용자 관리 (Placeholder)
@@ -212,14 +220,21 @@ malgn-chatbot-api/
 │   └── utils/
 │       └── utils.js            # 유틸리티 함수
 │
-├── migrations/                 # D1 마이그레이션 (순차 적용)
-│   ├── 001_quiz_content_based.sql
-│   ├── 002_session_course_fields.sql
-│   ├── 003_session_parent_id.sql
-│   ├── 004_content_lesson_id.sql
-│   └── 005_session_quiz_difficulty.sql
+├── migrations/                 # Aurora MySQL 마이그레이션 (순차 적용)
+│   ├── 001_quiz_content_based.sql      # TB_QUIZ 콘텐츠 기반 리팩토링
+│   ├── 002_session_course_fields.sql   # course_id, course_user_id, lesson_id 추가
+│   ├── 003_session_parent_id.sql       # parent_id 추가 (부모-자식 세션)
+│   ├── 004_content_lesson_id.sql       # TB_CONTENT에 lesson_id 추가
+│   ├── 005_session_quiz_difficulty.sql # quiz_difficulty (easy/normal/hard)
+│   ├── 005_session_quiz_split.sql      # 퀴즈 설정 분리 (choice_count/ox_count)
+│   ├── 006_quiz_session_id.sql         # TB_QUIZ에 session_id 추가
+│   ├── 006_session_generation_status.sql # 세션 generation_status 추가
+│   ├── 007_session_chat_content_ids.sql # 세션별 chat_content_ids 추가
+│   ├── 008_add_site_id.sql             # 멀티사이트 site_id 추가
+│   ├── 009_ai_log.sql                  # TB_AI_LOG 추가
+│   └── 010_ai_log_lesson_id.sql        # TB_AI_LOG content_id → lesson_id
 │
-├── schema.sql                  # 전체 DB 스키마 (초기 셋업용)
+├── schema.mysql.sql            # 전체 Aurora MySQL 스키마 (초기 셋업용)
 ├── wrangler.toml               # Cloudflare 설정 (멀티테넌트)
 └── package.json
 ```
@@ -255,16 +270,16 @@ malgn-chatbot-api/
 │                   │                                              │
 │     ┌─────────────┼─────────────────────────┐                   │
 │     ▼             ▼             ▼            ▼                   │
-│  ┌──────┐   ┌──────────┐  ┌────────┐  ┌─────────┐             │
-│  │  D1  │   │ Vectorize │  │  AI    │  │  KV/R2  │             │
-│  │(SQL) │   │ (벡터DB)  │  │Gateway │  │ (캐시)  │             │
-│  └──────┘   └──────────┘  └────────┘  └─────────┘             │
+│  ┌────────────┐ ┌──────────┐ ┌────────┐ ┌─────────┐           │
+│  │ Hyperdrive │ │ Vectorize│ │  AI    │ │  KV/R2  │           │
+│  │ → Aurora   │ │ (벡터DB) │ │Gateway │ │ (캐시)  │           │
+│  │   MySQL    │ │          │ │        │ │         │           │
+│  └────────────┘ └──────────┘ └────────┘ └─────────┘           │
 │                                │                                │
 │                    ┌───────────┼───────────┐                    │
 │                    ▼           ▼           ▼                    │
-│               Llama 3.1    Llama 3.1   BGE-base                │
-│                 8B           70B        en-v1.5                 │
-│               (채팅)      (학습/퀴즈)   (임베딩)                 │
+│              Gemma 3 12B   Gemma 3 12B    bge-m3                │
+│               (채팅)      (학습/퀴즈)    (임베딩,1024)         │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -288,15 +303,15 @@ malgn-chatbot-api/
 [서비스] chatService.prepareChatContext()
   │
   ├── [1단계 병렬] Promise.all([
-  │     getSessionContentIdsAndParent(sessionId),  ← D1 쿼리
-  │     embeddingService.embed(message),            ← AI: bge-base-en-v1.5
-  │     getSessionLearningData(sessionId)           ← D1 쿼리
+  │     getSessionContentIdsAndParent(sessionId),  ← Aurora MySQL 쿼리
+  │     embeddingService.embed(message),            ← AI: bge-m3
+  │     getSessionLearningData(sessionId)           ← Aurora MySQL 쿼리
   │   ])
   │
   ├── [2단계 병렬] Promise.all([
   │     searchSimilarDocuments(embedding, 5, contentIds),  ← Vectorize
-  │     getChatHistory(sessionId, 10),                     ← D1 쿼리
-  │     getQuizContext(contentIds)                          ← D1 쿼리
+  │     getChatHistory(sessionId, 10),                     ← Aurora MySQL 쿼리
+  │     getQuizContext(contentIds)                          ← Aurora MySQL 쿼리
   │   ])
   │
   ├── [3단계] buildSystemPrompt() → XML 구조 프롬프트 조립
@@ -305,7 +320,7 @@ malgn-chatbot-api/
        │
        ▼
 [라우트] Workers AI 스트리밍 호출
-  │ model: @cf/meta/llama-3.1-8b-instruct
+  │ model: @cf/google/gemma-3-12b-it
   │ messages: [system, ...history, user]
   │
   ├── SSE event: token → 프론트로 실시간 전송
@@ -333,7 +348,7 @@ malgn-chatbot-api/
 │  • 데이터 변환/조합                         │
 ├────────────────────────────────────────────┤
 │            Infrastructure Layer            │
-│  D1 (SQL) / Vectorize / Workers AI / KV    │
+│  Aurora MySQL / Vectorize / Workers AI / KV │
 │  • 데이터 영속화                            │
 │  • 벡터 검색                               │
 │  • LLM 추론                               │
@@ -766,7 +781,7 @@ data: {"message": "AI 모델 호출 중 오류가 발생했습니다."}
 ```javascript
 class ChatService {
   constructor(env, settings = {}) {
-    this.db = env.DB;                              // D1
+    this.db = env.DB;                              // Aurora MySQL (Hyperdrive 경유 헬퍼)
     this.ai = env.AI;                              // Workers AI
     this.vectorize = env.VECTORIZE;                // Vectorize
     this.embeddingService = new EmbeddingService(env);
@@ -867,7 +882,7 @@ DB 저장 (TB_CONTENT.content)
 청크 분할 (500자, 100자 오버랩, 문장 경계)
     │
     ▼
-각 청크 → 768차원 벡터 임베딩
+각 청크 → 1024차원 벡터 임베딩
     │
     ▼
 Vectorize 저장 (ID: content-{id}-chunk-{index})
@@ -898,12 +913,12 @@ class EmbeddingService {
     this.ai = env.AI;
   }
 
-  // 텍스트 → 768차원 벡터
+  // 텍스트 → 1024차원 벡터 (다국어)
   async embed(text) {
-    const result = await this.ai.run('@cf/baai/bge-base-en-v1.5', {
+    const result = await this.ai.run('@cf/baai/bge-m3', {
       text: [text]
     });
-    return result.data[0];   // number[768]
+    return result.data[0];   // number[1024]
   }
 
   // 텍스트 청크 분할
@@ -955,7 +970,7 @@ generateAndStoreLearningData(sessionId, contentIds, settings)
     │   └── 전체 콘텐츠 텍스트 조합 (최대 32,000자)
     │
     ├── generateLearningData(context, titles, settings)
-    │   └── Llama 3.1 70B 호출 → JSON 파싱
+    │   └── Gemma 3 12B 호출 → JSON 파싱
     │       {
     │         title: "세션 제목",
     │         learningGoal: "학습 목표",
@@ -980,7 +995,7 @@ generateAndStoreLearningData(sessionId, contentIds, settings)
 **LLM 호출 파라미터**:
 ```javascript
 {
-  model: '@cf/meta/llama-3.1-70b-instruct',
+  model: '@cf/google/gemma-3-12b-it',
   messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
   max_tokens: 1024,
   temperature: 0.2     // 학습 데이터는 보수적으로
@@ -997,11 +1012,11 @@ generateAndStoreLearningData(sessionId, contentIds, settings)
 각 콘텐츠별 generateQuizzesForContent()
     │
     ├── [병렬] generateChoiceQuizzes(context, choiceCount, difficulty)
-    │   └── Llama 3.1 70B → JSON 배열
+    │   └── Gemma 3 12B → JSON 배열
     │       [{ question, options[4], answer(1-4), explanation }]
     │
     └── [병렬] generateOXQuizzes(context, oxCount, difficulty)
-        └── Llama 3.1 70B → JSON 배열
+        └── Gemma 3 12B → JSON 배열
             [{ statement, answer(O/X), explanation }]
     │
     ▼
@@ -1026,7 +1041,7 @@ getDifficultyInstruction(difficulty) {
 **LLM 호출 파라미터**:
 ```javascript
 {
-  model: '@cf/meta/llama-3.1-70b-instruct',
+  model: '@cf/google/gemma-3-12b-it',
   max_tokens: 2048,
   temperature: 0.7     // 퀴즈는 다양성을 위해 높게
 }
@@ -1258,13 +1273,13 @@ const questions = JSON.parse(session.recommended_questions || '[]');
     │
     ▼
 [임베딩] embeddingService.embed()
-    │ 모델: @cf/baai/bge-base-en-v1.5
-    │ 출력: 768차원 벡터
+    │ 모델: @cf/baai/bge-m3
+    │ 출력: 1024차원 벡터
     │
     ▼
 [Vectorize 저장]
     ID: content-{contentId}-chunk-{index}
-    Vector: [0.023, -0.156, 0.089, ...]  (768개)
+    Vector: [0.023, -0.156, 0.089, ...]  (1024개)
     Metadata: {
       type: 'content',
       contentId: 5,
@@ -1323,7 +1338,7 @@ const questions = JSON.parse(session.recommended_questions || '[]');
     │   { role: 'user', content: "머신러닝이란 무엇인가요?" }
     │ ]
     │
-    │ AI.run('@cf/meta/llama-3.1-8b-instruct', { messages, stream: true })
+    │ AI.run('@cf/google/gemma-3-12b-it', { messages, stream: true })
     │
     ▼
 [5단계: 스트리밍 응답]
@@ -1776,27 +1791,27 @@ window.MalgnTutor = {
 ### 12.2 테넌트 추가 절차
 
 ```bash
-# 1. Cloudflare 리소스 생성
-wrangler d1 create malgn-chatbot-db-newtenant
+# 1. Cloudflare 리소스 생성 (AWS RDS Aurora MySQL 인스턴스 + Hyperdrive 바인딩 추가)
+wrangler hyperdrive create malgn-chatbot-hyperdrive-newtenant \
+  --connection-string="mysql://<USER>:<PASSWORD>@<HOST>:3306/<DATABASE>"
 wrangler kv:namespace create malgn-chatbot-kv-newtenant
-# Vectorize는 대시보드에서 생성 (768차원, cosine)
+# Vectorize는 대시보드에서 생성 (1024차원, cosine)
 
 # 2. wrangler.toml에 환경 추가
 [env.newtenant]
 name = "malgn-chatbot-api-newtenant"
 vars = { ENVIRONMENT = "production", TENANT_ID = "newtenant" }
-[[env.newtenant.d1_databases]]
-binding = "DB"
-database_name = "malgn-chatbot-db-newtenant"
-database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+[[env.newtenant.hyperdrive]]
+binding = "HYPERDRIVE"
+id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 # ... KV, Vectorize, R2, AI 바인딩
 
-# 3. 스키마 적용
-wrangler d1 execute malgn-chatbot-db-newtenant --file=./schema.sql --env newtenant
+# 3. 스키마 적용 (Aurora MySQL)
+mysql -h <HOST> -u <USER> -p <DATABASE> < schema.mysql.sql
 
 # 4. 마이그레이션 적용 (순차)
-wrangler d1 execute malgn-chatbot-db-newtenant --file=./migrations/001_quiz_content_based.sql --env newtenant
-# ... 005까지
+mysql -h <HOST> -u <USER> -p <DATABASE> < migrations/001_quiz_content_based.sql
+# ... 010까지
 
 # 5. 시크릿 설정
 wrangler secret put API_KEY --env newtenant
@@ -1878,18 +1893,18 @@ wrangler pages deploy . --project-name=malgn-chatbot-user1 --commit-dirty=true -
    └── 테넌트별 배포본도 업데이트
 ```
 
-### 13.3 D1 마이그레이션
+### 13.3 Aurora MySQL 마이그레이션
 
 ```bash
-# 로컬 적용
-wrangler d1 execute malgn-chatbot-db --local --file=./migrations/005_session_quiz_difficulty.sql
+# 로컬 적용 (로컬 또는 dev MySQL)
+mysql -h <DEV_HOST> -u <USER> -p <DATABASE> < migrations/005_session_quiz_difficulty.sql
 
-# 운영 적용 (dev/user1 공유 D1 — 점진적으로 MySQL 전환 중)
-wrangler d1 execute malgn-chatbot-db --file=./migrations/005_session_quiz_difficulty.sql
+# 운영 적용 (dev/user1 공유 Aurora MySQL)
+mysql -h <SHARED_HOST> -u <USER> -p <DATABASE> < migrations/005_session_quiz_difficulty.sql
 
-# cloud 전용 MySQL — Hyperdrive 통해 직접 SQL 실행
-mysql -h <HOST> -u <USER> -p <DATABASE> < ./schema.mysql.sql
-# (또는 개별 마이그레이션 SQL을 mysql 클라이언트로 적용)
+# cloud 전용 Aurora MySQL — Hyperdrive 통해 동일 인스턴스에 적용
+mysql -h <CLOUD_HOST> -u <USER> -p <DATABASE> < migrations/005_session_quiz_difficulty.sql
+# (전체 스키마 재구성 시 schema.mysql.sql 사용)
 ```
 
 ### 13.4 한국어 커밋 메시지 이슈
@@ -1918,13 +1933,13 @@ wrangler dev
 # [PERF] 마커로 성능 측정 포인트 확인
 ```
 
-**D1 데이터 확인**:
+**Aurora MySQL 데이터 확인**:
 ```bash
-# 로컬 DB 쿼리
-wrangler d1 execute malgn-chatbot-db --local --command="SELECT * FROM TB_SESSION WHERE status = 1"
+# 로컬/dev DB 쿼리
+mysql -h <DEV_HOST> -u <USER> -p <DATABASE> -e "SELECT * FROM TB_SESSION WHERE status = 1 LIMIT 10"
 
 # 운영 DB 쿼리
-wrangler d1 execute malgn-chatbot-db --command="SELECT * FROM TB_SESSION WHERE status = 1 LIMIT 10"
+mysql -h <PROD_HOST> -u <USER> -p <DATABASE> -e "SELECT * FROM TB_SESSION WHERE status = 1 LIMIT 10"
 ```
 
 **Vectorize 상태 확인**:
@@ -2002,11 +2017,11 @@ console.log('[PERF] Total context preparation:', Date.now() - start, 'ms');
 
 | 단계 | 소요 시간 |
 |------|-----------|
-| 임베딩 (bge-base-en-v1.5) | 100~300ms |
+| 임베딩 (bge-m3) | 100~300ms |
 | Vectorize 검색 | 20~50ms |
-| D1 쿼리 (각각) | 5~10ms |
+| Aurora MySQL 쿼리 (각각, Hyperdrive 풀링) | 5~15ms |
 | 컨텍스트 준비 전체 | 150~400ms |
-| LLM 첫 토큰 (8B) | 500~1000ms |
+| LLM 첫 토큰 (Gemma 3 12B) | 500~1000ms |
 | LLM 전체 응답 (8B) | 2~5초 |
 | LLM 학습데이터 생성 (70B) | 5~15초 |
 | LLM 퀴즈 생성 (70B) | 5~10초/콘텐츠 |
@@ -2408,9 +2423,10 @@ Vectorize 인덱스 재생성 후 사용.
 | 용어 | 설명 |
 |------|------|
 | RAG | Retrieval-Augmented Generation. 검색 기반 생성형 AI |
-| 벡터 임베딩 | 텍스트를 수치 벡터(768차원)로 변환한 것 |
+| 벡터 임베딩 | 텍스트를 수치 벡터(1024차원)로 변환한 것 |
 | Vectorize | Cloudflare의 벡터 데이터베이스 서비스 |
-| D1 | Cloudflare의 SQLite 기반 서버리스 데이터베이스 |
+| Hyperdrive | Cloudflare의 외부 DB(MySQL/Postgres) 커넥션 풀링/가속 서비스 |
+| Aurora MySQL | AWS RDS Aurora MySQL — 본 프로젝트의 메타데이터 DB |
 | KV | Cloudflare의 Key-Value 스토리지 |
 | R2 | Cloudflare의 오브젝트 스토리지 (S3 호환) |
 | Workers | Cloudflare의 서버리스 컴퓨팅 플랫폼 |
