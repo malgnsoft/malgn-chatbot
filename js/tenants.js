@@ -28,6 +28,13 @@ const Tenants = {
       apiUrl: 'https://malgn-chatbot-api-cloud.malgnsoft.workers.dev',
       apiKey: '00b2ef6567725d49e5c39f5666eac7d13511848e',
       siteId: 1
+    },
+    {
+      id: 'secbiz',
+      name: 'secbiz',
+      apiUrl: 'https://malgn-chatbot-api-secbiz.malgnsoft.workers.dev',
+      apiKey: 'fe803cc801237145bda3c8b0a3391827503c9cbb',
+      siteId: 1
     }
     // 새 테넌트 추가 예시:
     // {
