@@ -10,16 +10,23 @@ const Tenants = {
   list: [
     {
       id: 'default',
-      name: '기본',
+      name: '기본 (dev)',
       apiUrl: 'https://malgn-chatbot-api.malgnsoft.workers.dev',
       apiKey: '5Ot1la9ausoT0QUT4KsZlFwoW4TGIjb7NcIr1bKj',
       siteId: 1
     },
     {
-      id: 'user2',
-      name: 'User2',
-      apiUrl: 'https://malgn-chatbot-api-user2.malgnsoft.workers.dev',
-      apiKey: 'aO8XJ82M5TVNYBbA65qdOAI4mDQmp8g8V59uKm7J',
+      id: 'user1',
+      name: 'User1',
+      apiUrl: 'https://malgn-chatbot-api-user1.malgnsoft.workers.dev',
+      apiKey: '5Ot1la9ausoT0QUT4KsZlFwoW4TGIjb7NcIr1bKj',
+      siteId: 1
+    },
+    {
+      id: 'cloud',
+      name: 'Cloud',
+      apiUrl: 'https://malgn-chatbot-api-cloud.malgnsoft.workers.dev',
+      apiKey: '00b2ef6567725d49e5c39f5666eac7d13511848e',
       siteId: 1
     }
     // 새 테넌트 추가 예시:
@@ -27,7 +34,8 @@ const Tenants = {
     //   id: 'user3',
     //   name: 'User3',
     //   apiUrl: 'https://malgn-chatbot-api-user3.malgnsoft.workers.dev',
-    //   apiKey: 'YOUR_API_KEY'
+    //   apiKey: 'YOUR_API_KEY',
+    //   siteId: 1
     // }
   ],
 
@@ -41,10 +49,11 @@ const Tenants = {
     // localStorage에서 마지막 선택된 테넌트 복원
     let savedTenantId = localStorage.getItem('selected_tenant');
 
-    // user1 → default 마이그레이션
-    if (savedTenantId === 'user1') {
-      savedTenantId = 'default';
-      localStorage.setItem('selected_tenant', 'default');
+    // 구 테넌트 ID → 신규 ID 마이그레이션
+    // (user2는 cloud로 명칭 변경됨)
+    if (savedTenantId === 'user2') {
+      savedTenantId = 'cloud';
+      localStorage.setItem('selected_tenant', 'cloud');
     }
 
     if (savedTenantId && this.getTenant(savedTenantId)) {

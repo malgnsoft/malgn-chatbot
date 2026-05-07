@@ -87,7 +87,7 @@ npx wrangler --version   # Wrangler v3 이상
 git clone <repo>/malgn-chatbot.git
 git clone <repo>/malgn-chatbot-api.git
 git clone <repo>/malgn-chatbot-user1.git
-git clone <repo>/malgn-chatbot-user2.git
+git clone <repo>/malgn-chatbot-cloud.git
 
 # 프론트엔드 의존성 설치
 cd malgn-chatbot && npm install
@@ -145,7 +145,7 @@ wrangler d1 execute malgn-chatbot-db --local --file=./migrations/005_session_qui
 malgn-chatbot/              ← 프론트엔드 (관리자 대시보드 + 임베드 위젯)
 malgn-chatbot-api/          ← 백엔드 API (Cloudflare Workers)
 malgn-chatbot-user1/        ← user1 테넌트 프론트엔드 배포본
-malgn-chatbot-user2/        ← user2 테넌트 프론트엔드 배포본
+malgn-chatbot-cloud/        ← cloud 테넌트 프론트엔드 배포본 (MySQL 기반)
 ```
 
 ### 3.2 프론트엔드 디렉토리 (`malgn-chatbot/`)
@@ -1519,7 +1519,7 @@ async deleteSession(sessionId) {
 ```javascript
 // 발행 (dispatch)
 window.dispatchEvent(new CustomEvent('tenant:changed', {
-  detail: { tenantId: 'user2', apiUrl: 'https://...' }
+  detail: { tenantId: 'cloud', apiUrl: 'https://...' }
 }));
 
 // 구독 (listen)
@@ -1751,22 +1751,26 @@ window.MalgnTutor = {
 ┌────────────────────────────────────────────────────┐
 │                   wrangler.toml                     │
 ├───────────────┬─────────────────┬──────────────────┤
-│   [env.dev]   │  [env.user1]    │  [env.user2]     │
-│   (로컬/개발)  │  (user1 운영)   │  (user2 운영)    │
+│   [env.dev]   │  [env.user1]    │  [env.cloud]     │
+│   (로컬/개발)  │  (user1 운영)   │  (cloud 운영)    │
 ├───────────────┼─────────────────┼──────────────────┤
-│ D1: chatbot-db│ D1: chatbot-db  │ D1: chatbot-db   │
-│  (공유)       │  (dev와 공유)    │     -user2       │
+│ Hyperdrive:   │ Hyperdrive:     │ Hyperdrive:      │
+│  MySQL(공유)  │  MySQL(공유)    │  MySQL(전용)     │
 ├───────────────┼─────────────────┼──────────────────┤
 │ KV: chatbot   │ KV: chatbot     │ KV: chatbot      │
-│  (공유)       │  (dev와 공유)    │     -user2       │
+│  (공유)       │  (dev와 공유)    │     -cloud       │
 ├───────────────┼─────────────────┼──────────────────┤
 │ Vectorize:    │ Vectorize:      │ Vectorize:       │
 │  chatbot-vecs │  chatbot-vecs   │  chatbot-vecs    │
-│  (공유)       │  (dev와 공유)    │     -user2       │
+│  (공유)       │  (dev와 공유)    │     -cloud       │
 ├───────────────┼─────────────────┼──────────────────┤
 │ R2: chatbot   │ R2: chatbot     │ R2: chatbot      │
-│  -files       │  -files         │  -files-user2    │
+│  -files       │  -files         │  -files-cloud    │
 └───────────────┴─────────────────┴──────────────────┘
+
+* site_id: 한 테넌트 DB 안에서 호스트 솔루션을 분리하기 위한
+  런타임 헤더 (X-Site-Id, 기본 1). 같은 MySQL을 여러 호스트가
+  공유할 때 데이터 격리에 사용.
 ```
 
 ### 12.2 테넌트 추가 절차
@@ -1816,9 +1820,9 @@ const tenants = [
     apiKey: 'xxx'
   },
   {
-    id: 'user2',
-    name: 'User2',
-    apiUrl: 'https://malgn-chatbot-api-user2.dotype.workers.dev',
+    id: 'cloud',
+    name: 'Cloud',
+    apiUrl: 'https://malgn-chatbot-api-cloud.dotype.workers.dev',
     apiKey: 'yyy'
   }
 ];
@@ -1844,7 +1848,7 @@ wrangler dev
 # API 배포
 wrangler deploy                    # dev 환경
 wrangler deploy --env user1        # user1 환경
-wrangler deploy --env user2        # user2 환경
+wrangler deploy --env cloud        # cloud 환경
 
 # 프론트엔드 배포 (Cloudflare Pages)
 cd malgn-chatbot
@@ -1864,7 +1868,7 @@ wrangler pages deploy . --project-name=malgn-chatbot-user1 --commit-dirty=true -
 
 2. API 배포
    └── wrangler deploy --env user1
-   └── wrangler deploy --env user2
+   └── wrangler deploy --env cloud
 
 3. 프론트엔드 빌드
    └── cd malgn-chatbot && npm run build
@@ -1880,11 +1884,12 @@ wrangler pages deploy . --project-name=malgn-chatbot-user1 --commit-dirty=true -
 # 로컬 적용
 wrangler d1 execute malgn-chatbot-db --local --file=./migrations/005_session_quiz_difficulty.sql
 
-# 운영 적용 (dev/user1 공유 DB)
+# 운영 적용 (dev/user1 공유 D1 — 점진적으로 MySQL 전환 중)
 wrangler d1 execute malgn-chatbot-db --file=./migrations/005_session_quiz_difficulty.sql
 
-# user2 독립 DB
-wrangler d1 execute malgn-chatbot-db-user2 --file=./migrations/005_session_quiz_difficulty.sql --env user2
+# cloud 전용 MySQL — Hyperdrive 통해 직접 SQL 실행
+mysql -h <HOST> -u <USER> -p <DATABASE> < ./schema.mysql.sql
+# (또는 개별 마이그레이션 SQL을 mysql 클라이언트로 적용)
 ```
 
 ### 13.4 한국어 커밋 메시지 이슈
