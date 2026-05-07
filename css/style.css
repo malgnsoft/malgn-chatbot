@@ -753,6 +753,73 @@ h1, h5.card-title {
   font-size: 0.65rem;
 }
 
+/* 부모/자식 세션 구분 */
+.session-item__title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.session-item__title-row .session-item__title {
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.session-badge {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.session-badge--parent {
+  background: rgba(124, 58, 237, 0.12);
+  color: #6D28D9;
+}
+
+.session-badge--child {
+  background: rgba(75, 85, 99, 0.1);
+  color: #4B5563;
+}
+
+.session-item--child {
+  margin-left: 24px;
+  background: #fafbfc;
+  border-left: 2px solid var(--flat-primary, #7C3AED);
+  padding-left: 12px;
+}
+
+.session-item--child:hover {
+  background: #f3f4f6;
+}
+
+.session-item--child .session-item__icon {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+  background: #f3f4f6;
+}
+
+.session-item__indent {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--flat-text-muted, #6b7280);
+  font-size: 14px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.session-item--child {
+  position: relative;
+}
+
 .session-item__actions {
   display: flex;
   flex-direction: column;

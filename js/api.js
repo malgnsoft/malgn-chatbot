@@ -361,11 +361,14 @@ const API = {
    * 세션 목록 조회
    * @param {number} page - 페이지 번호
    * @param {number} limit - 페이지당 개수
+   * @param {Object} opts - { includeChildren: boolean } — true면 자식 세션도 함께 반환
    * @returns {Promise<Object>} - API 응답
    */
-  async getSessions(page = 1, limit = 50) {
+  async getSessions(page = 1, limit = 50, opts = {}) {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (opts.includeChildren) params.set('include', 'children');
     const response = await fetch(
-      `${this.getBaseUrl()}/sessions?page=${page}&limit=${limit}`,
+      `${this.getBaseUrl()}/sessions?${params}`,
       { headers: this.getAuthHeaders() }
     );
 

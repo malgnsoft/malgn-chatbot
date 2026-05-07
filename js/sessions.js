@@ -42,7 +42,7 @@ const Sessions = {
    */
   async loadSessions() {
     try {
-      const result = await API.getSessions();
+      const result = await API.getSessions(1, 50, { includeChildren: true });
 
       if (result.success) {
         this.sessions = result.data.sessions || [];
@@ -68,14 +68,24 @@ const Sessions = {
       return;
     }
 
-    this.sessionList.innerHTML = this.sessions.map(session => `
-      <div class="session-item ${session.id === this.currentSessionId ? 'active' : ''}"
-           data-id="${session.id}">
+    this.sessionList.innerHTML = this.sessions.map(session => {
+      const isChild = (session.parent_id || 0) > 0;
+      const itemClass = `session-item${session.id === this.currentSessionId ? ' active' : ''}${isChild ? ' session-item--child' : ' session-item--parent'}`;
+      const badge = isChild
+        ? '<span class="session-badge session-badge--child">자식</span>'
+        : `<span class="session-badge session-badge--parent">부모${session.childCount ? ` · 학습자 ${session.childCount}명` : ''}</span>`;
+      const childIndent = isChild ? '<span class="session-item__indent">↳</span>' : '';
+      return `
+      <div class="${itemClass}" data-id="${session.id}" data-parent-id="${session.parent_id || 0}">
+        ${childIndent}
         <div class="session-item__icon">
           <i class="bi bi-chat-dots"></i>
         </div>
         <div class="session-item__content">
-          <div class="session-item__title" title="${this.escapeHtml(session.title || '새 대화')}">${this.escapeHtml(session.title || '새 대화')}</div>
+          <div class="session-item__title-row">
+            <div class="session-item__title" title="${this.escapeHtml(session.title || '새 대화')}">${this.escapeHtml(session.title || '새 대화')}</div>
+            ${badge}
+          </div>
           <div class="session-item__preview">${this.escapeHtml(session.lastMessage || '메시지 없음')}</div>
           <div class="session-item__meta">
             <span><i class="bi bi-clock"></i> ${this.formatDate(session.updated_at || session.created_at)}</span>
@@ -87,8 +97,8 @@ const Sessions = {
             <i class="bi bi-trash3"></i>
           </button>
         </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
 
     // 이벤트 바인딩
     this.sessionList.querySelectorAll('.session-item').forEach(item => {
