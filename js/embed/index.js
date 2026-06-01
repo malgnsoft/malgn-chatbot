@@ -160,9 +160,19 @@ if (window.__malgnTutorLoaded) {
       chatManager.sendMessage(question);
     };
 
-    // 기존 세션 ID가 있으면 로드, 부모 세션 또는 콘텐츠가 있으면 자동 세션 생성
-    if (cfg.sessionId) {
-      chatManager.loadSession(cfg.sessionId);
+    // 우선순위:
+    // 1) parentSessionId + courseUserId가 있으면 → 항상 ensureSession (사용자별 자식 세션 매칭)
+    // 2) cfg.sessionId만 있으면 → loadSession
+    // 3) parentSessionId/contentIds만 있으면 → ensureSession
+    const hasParentAndUser = cfg.parentSessionId && cfg.courseUserId;
+    if (hasParentAndUser) {
+      chatManager.ensureSession();
+    } else if (cfg.sessionId) {
+      chatManager.loadSession(cfg.sessionId).then(() => {
+        if (!chatManager.sessionId && (cfg.parentSessionId || (cfg.contentIds && cfg.contentIds.length > 0))) {
+          chatManager.ensureSession();
+        }
+      });
     } else if (cfg.parentSessionId || (cfg.contentIds && cfg.contentIds.length > 0)) {
       chatManager.ensureSession();
     }

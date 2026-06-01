@@ -149,21 +149,10 @@ export class ChatManager {
       }
     );
 
-    // 부모 세션이 없어서 실패 시 독립 세션으로 재시도
-    if (!result.success && this.config.parentSessionId) {
-      console.warn('부모 세션을 찾을 수 없어 독립 세션으로 생성합니다.');
-      result = await this.api.createSession(
-        this.config.contentIds || [],
-        {
-          courseId: this.config.courseId,
-          courseUserId: this.config.courseUserId,
-          lessonId: this.config.lessonId,
-          userId: this.config.userId,
-          settings: this.config.settings,
-          parentSessionId: 0,
-          chatContentIds: this.config.chatContentIds
-        }
-      );
+    // 부모 세션이 없으면 백엔드에서 lesson_id로 자동 매칭됩니다.
+    // 그래도 실패하면 에러 처리.
+    if (!result.success) {
+      console.error('세션 생성 실패:', result.error);
     }
 
     if (result.success) {
